@@ -17,9 +17,12 @@
 .pz.earth .pz-atmo{box-shadow:0 0 calc(var(--s)*.22) rgba(110,170,255,.45),inset 0 0 calc(var(--s)*.12) rgba(140,190,255,.35)}
 .pz.venus .pz-atmo{box-shadow:0 0 calc(var(--s)*.25) rgba(255,214,150,.35)}
 .pz.neptune .pz-atmo,.pz.uranus .pz-atmo{box-shadow:0 0 calc(var(--s)*.2) rgba(120,200,255,.35)}
-.pz-ring{position:absolute;left:50%;top:50%;width:calc(var(--s)*2.35);height:calc(var(--s)*.62);transform:translate(-50%,-50%) rotate(-16deg);border-radius:50%;pointer-events:none;
- background:radial-gradient(closest-side,transparent 62%,rgba(205,186,148,.75) 64%,rgba(232,214,176,.9) 72%,rgba(150,130,96,.35) 76%,rgba(226,206,166,.85) 80%,rgba(190,168,126,.55) 90%,transparent 100%)}
-.pz-ring.front{clip-path:inset(50% 0 0 0)}
+.pz-ring{position:absolute;left:50%;top:50%;width:calc(var(--s)*2.5);height:calc(var(--s)*2.5);background:center/100% 100% no-repeat;pointer-events:none;
+ transform:translate(-50%,-50%) rotate(-18deg) scaleY(.27)}
+.pz-rb{z-index:0}.pz-clip{z-index:1}.pz-rf{z-index:2;clip-path:inset(50% 0 0 0)}
+/* the rings cast a thin curved shadow across the planet's disc */
+.pz-rshadow{position:absolute;left:-20%;right:-20%;top:50%;height:calc(var(--s)*.11);transform:translateY(-10%) rotate(-18deg);border-radius:50%;
+ background:linear-gradient(rgba(0,0,0,0),rgba(20,14,6,.55) 40%,rgba(20,14,6,.55) 60%,rgba(0,0,0,0));pointer-events:none}
 /* ---- system container ---- */
 .sys{position:relative;width:360px;height:214px;flex:none;border-radius:20px;overflow:hidden;--line:rgba(255,255,255,.075)}
 .sys-sky{position:absolute;inset:0;background:var(--stars) center/cover,radial-gradient(ellipse at 50% 46%,#141a3a 0,#070a1c 60%,#03040c 100%);opacity:1}
@@ -105,3 +108,11 @@ details.faq:hover{background:rgba(255,255,255,.04)}
 [data-density="compact"] .jrow,[data-density="compact"] .up{padding:8px 10px}[data-density="compact"] main{gap:10px}
 [data-density="compact"] .rtbl td{padding:6px 9px}
 @media print{.toasts,.tour-spot,.tour-card,.ipop,.sys{display:none!important}.view[hidden]{display:none!important}}
+
+.pill.src{font-weight:700}.pill.src.demo{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 40%,transparent)}.pill.src.live{color:var(--ok)}.pill.src .live{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+/* placeholder colour while a texture is still being generated (first visit only) */
+.pz-clip{background:radial-gradient(circle at 35% 32%,var(--pzc1,#d9d4cc),var(--pzc2,#6b665f))}
+.pz.earth{--pzc1:#8fc2ff;--pzc2:#1d4f9c}.pz.mars{--pzc1:#e6a877;--pzc2:#8e3b1c}.pz.jupiter{--pzc1:#f1e3c5;--pzc2:#9b6d48}.pz.saturn{--pzc1:#f4e6c2;--pzc2:#b8945c}
+.pz.venus{--pzc1:#f4dfac;--pzc2:#a8743a}.pz.uranus{--pzc1:#d8fbff;--pzc2:#6cc6d6}.pz.neptune{--pzc1:#9fb3ff;--pzc2:#1d3a9e}
+.pz-tex,.pz-cloud,.sun-disc img{transition:opacity .5s}.pz-tex:not(.ready)[src^="data:image/gif"],.pz-cloud:not(.ready)[src^="data:image/gif"]{opacity:0}
+.sun-disc{background:radial-gradient(circle at 40% 38%,#fff6c8,#fbbf24 45%,#ea580c)}

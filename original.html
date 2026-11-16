@@ -557,12 +557,13 @@ canvas#fx{position:fixed;inset:0;z-index:90;pointer-events:none}
 <div class="banner glass" id="banner">🎉 All clear today — 19/19 business units clean</div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
+<script src="data/live.js"></script>
 <script>
 const $=s=>document.querySelector(s);
 let celebLevel='on',motionOn=!matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- dummy data ---------- */
-const BUS=[
+const BUS=(window.SAMAT_LIVE&&window.SAMAT_LIVE.bus)||[
  {k:'SG 5010',m:'SAM Singapore',st:'bad',n:1,kn:0,i:0,c:0,f:4,t:'07:57',tr:[0,0,1,0,0,0,1],bell:1},
  {k:'HK 5090',m:'SAM Hong Kong',st:'ok',n:0,kn:0,i:0,c:0,f:8,t:'07:56',tr:[1,0,0,0,0,0,0],streak:7},
  {k:'TH 5640',m:'AT + SAM Thailand',st:'ok',n:0,kn:0,i:0,c:2,f:18,t:'00:15',tr:[2,1,0,1,0,0,0]},
@@ -584,7 +585,7 @@ const BUS=[
  {k:'Campaigns',m:'Per-campaign run checks',st:'bad',n:9,kn:149,i:44,c:1,f:12,t:'11:09',tr:[3,3,4,5,6,8,9],bell:3},
 ];
 const CHECKS=['Tier','Escrow','Return','Dup','No-contact','Neg bal','VJ','Campaign'];
-const KPIS=[
+const KPIS=(window.SAMAT_LIVE&&window.SAMAT_LIVE.kpis)||[
  {l:'New findings',v:46,d:'+12',good:false,tip:'Issues detected for the first time in today\'s runs. Lower is better.',tr:[30,28,35,40,34,38,46]},
  {l:'Known / decided',v:149,d:'+3',good:null,tip:'Findings already reviewed and decided. They stay visible until closed.',tr:[140,142,145,146,146,148,149]},
  {l:'Closed today',v:127,d:'+41',good:true,tip:'Findings verified as fixed today. Higher is better.',tr:[60,70,80,86,90,100,127]},
@@ -592,7 +593,7 @@ const KPIS=[
  {l:'Vouchers issued',v:564,d:'+8%',good:true,tip:'Vouchers created in the last 24h across programs.',tr:[480,500,520,510,530,540,564]},
  {l:'Vouchers expired',v:4964,d:'+3.1σ',good:false,tip:'Anomaly: 3.1× above the 30-day average. Check expiry batch.',tr:[1500,1600,1550,1700,1650,1600,4964],anom:true},
 ];
-const ATT=[
+const ATT=(window.SAMAT_LIVE&&window.SAMAT_LIVE.attention)||[
  {s:'bad',t:'No-contact members · 34 new',p:'All programs · first seen 15 Nov · 2 days open',tags:['All BUs','No-contact']},
  {s:'bad',t:'Campaigns · 9 new failed sends',p:'TH Black birthday voucher · reason: missing email',tags:['Campaigns']},
  {s:'bad',t:'KR 5040 · ATKR20240000505338 tier check',p:'Expect "Insider" after AT batch 02:30 UTC',tags:['KR 5040','Tier']},
@@ -600,14 +601,14 @@ const ATT=[
  {s:'warn',t:'SG 5010 · 1 new finding',p:'Tier downgrade candidate · verify after batch',tags:['SG 5010']},
  {s:'info',t:'Vouchers expired anomaly',p:'4,964 today vs 1,610 avg · TW 5060 heaviest',tags:['TW 5060','Anomaly']},
 ];
-const TODO=['Review 34 no-contact members','Verify KR tier after 02:30 UTC batch','Cancel TUMI MY outlet returns 10237136/37','Decide MY 5050 guest re-buy return','Load escrow release file for SSMY…1133'];
-const WATCH=[
+const TODO=(window.SAMAT_LIVE&&window.SAMAT_LIVE.todo)||['Review 34 no-contact members','Verify KR tier after 02:30 UTC batch','Cancel TUMI MY outlet returns 10237136/37','Decide MY 5050 guest re-buy return','Load escrow release file for SSMY…1133'];
+const WATCH=(window.SAMAT_LIVE&&window.SAMAT_LIVE.watch)||[
  ['SSMY20250001831133','MY 5050','Black ends 2026-11-23 · would downgrade (stuck escrow)','23 Nov','Load Escrow_Stuck release file, verify renewal','Waiting user',false],
  ['ATKR20240000505338','KR 5040','After AT batch expect tier Insider','16 Nov','Verify lifecycle "Downgrade Insider"','Waiting batch',false],
  ['TUMY20230001018426','MY 5050','Outlet returns 10237136 + 10237137 still Pending','15 Nov','Valuehub to cancel via OutletReturn_CANCEL file','Open',true],
  ['SSMY20250001680063','MY 5050','Guest re-buy return 49818 processed −3,002 pts','15 Nov','User decision pending','Waiting user',true],
 ];
-let NOTIFS=[
+let NOTIFS=(window.SAMAT_LIVE&&window.SAMAT_LIVE.notifications)||[
  {id:1,s:'bad',cat:'critical',t:'You have a new notification: No-contact members – 34 new findings',p:'All programs · open the list to review contacts.',g:'Today',ago:'12 min ago',u:true},
  {id:2,s:'bad',cat:'campaigns',t:'You have a new notification: TH Black Birthday campaign failed – 41 records (Missing email)',p:'Failing 3 runs in a row · open issues list.',g:'Today',ago:'1 h ago',u:true},
  {id:3,s:'info',cat:'runs',t:'KR 5040 run finished – 1 check, 0 failed',p:'611 s · output Daily_Summary.txt',g:'Today',ago:'2 h ago',u:true},
@@ -677,7 +678,7 @@ renderTodo();
 
 /* ---------- market pulse ---------- */
 const CHK_COL={Tier:'#0A84FF',Escrow:'#BF5AF2',Campaign:'#FF453A','No-contact':'#FF9F0A',Returns:'#64D2FF',Vouchers:'#FFD60A',Other:'#8E8E93'};
-const PULSE=[
+const PULSE=(window.SAMAT_LIVE&&window.SAMAT_LIVE.pulse)||[
  {k:'TH 5640',m:'AT + SAM Thailand',seg:{Campaign:41,'No-contact':9,Tier:2},tr:[20,24,30,35,40,46,52],d:'+12',r:'Birthday campaign failing — missing email'},
  {k:'MY 5050',m:'SAM + AT Malaysia',seg:{Escrow:6,Returns:4,Campaign:9,Vouchers:3},tr:[30,28,26,25,24,23,22],d:'−3',r:'Stuck escrow + outlet returns pending'},
  {k:'KR 5040',m:'SAM + AT Korea',seg:{Tier:8,Campaign:6,'No-contact':4},tr:[24,22,20,21,19,18,18],d:'0',r:'Tier recalculation waiting for AT batch'},
@@ -735,7 +736,7 @@ const REASONS={'Missing email':{c:'#FF453A',fix:'Member has no email/contact poi
  'Journal not created':{c:'#64D2FF',fix:'The DPE did not create the journal. Check the DPE run history and the batch job log for the campaign run time.'},
  'Tier mismatch':{c:'#FFD60A',fix:'Member tier changed after targeting. Re-run after the tier batch (02:30 UTC) and verify.'},
  'API timeout':{c:'#8E8E93',fix:'Transient callout timeout. If more than 5%, check the integration log and retry the run.'}};
-const CAMPS=[
+const CAMPS=(window.SAMAT_LIVE&&window.SAMAT_LIVE.campaigns)||[
  {id:1,n:'TH Black Birthday Voucher',bu:'TH 5640',p:'SAM',t:'Birthday',sch:'Daily 06:30',tg:212,sent:171,fail:41,skip:0,r:{'Missing email':38,'Invalid member status':3},streak:3,since:'14 Nov',st:'fail',tri:'Investigating',new:false},
  {id:2,n:'SG Welcome Voucher – New Navy',bu:'SG 5010',p:'SAM',t:'Welcome',sch:'Daily 06:30',tg:58,sent:52,fail:6,skip:0,r:{'Voucher def expired':6},streak:1,since:'16 Nov',st:'fail',tri:'New',new:true},
  {id:3,n:'MY Year-round Silver Voucher',bu:'MY 5050',p:'AT',t:'Year-round',sch:'Monthly',tg:140,sent:131,fail:9,skip:0,r:{'Journal not created':5,'Missing email':4},streak:2,since:'15 Nov',st:'partial',tri:'Waiting fix',new:false},

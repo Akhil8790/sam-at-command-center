@@ -25,11 +25,29 @@ const PAINT={
  uranus:(u,v,lat)=>{const n=fbm(u*3,v*6,3,3);return mix(hex('#9fe3ea'),hex('#6cc6d6'),Math.sin(lat*6+n)*.5+.5)},
  neptune:(u,v,lat)=>{const n=fbm(u*4,v*7,4,4);let c=ramp([[0,'#1d3a9e'],[.5,'#3c63d6'],[1,'#7fa2ff']],Math.sin(lat*9+n*2.5)*.5+.5);const ex=Math.min(Math.abs(u-.6),1-Math.abs(u-.6))*7,ey=(lat-.25)*10;if(ex*ex+ey*ey<1)c=mix(c,hex('#0e1d5c'),.7);return c},
  sun:(u,v,lat)=>{const n=fbm(u*14,v*7,14,5),g=fbm(u*40,v*20,40,2);return ramp([[0,'#c2410c'],[.4,'#f97316'],[.6,'#fbbf24'],[.85,'#fde68a'],[1,'#fffbeb']],n*.8+g*.35)}};
-const TEX={};
-function tex(kind){if(TEX[kind])return TEX[kind];const W=kind==='sun'?256:192,H=W/2;const c=document.createElement('canvas');c.width=W*2;c.height=H;const g=c.getContext('2d');const im=g.createImageData(W,H),f=PAINT[kind];
+const TEX={};const TV='v5.2';const BLANK='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+try{const c=JSON.parse(localStorage.getItem('samat_tex')||'{}');if(c.v===TV)Object.assign(TEX,c.t)}catch(e){}
+const QUEUE=[];let qBusy=false;
+function saveTex(){try{const t={};['earth','cloud','mars','jupiter','saturn','venus','mercury','uranus','neptune','sun','ring','stars'].forEach(k=>{if(TEX[k])t[k]=TEX[k]});localStorage.setItem('samat_tex',JSON.stringify({v:TV,t}))}catch(e){}}
+function pump(){if(qBusy||!QUEUE.length)return;qBusy=true;(window.requestIdleCallback||(f=>setTimeout(()=>f({timeRemaining:()=>16}),30)))(()=>{const k=QUEUE.shift();
+ const url=k==='ring'?ringTex(true):k==='stars'?stars(true):texNow(k);document.querySelectorAll(`img[data-tex="${k}"]`).forEach(i=>{i.src=url;i.classList.add('ready')});
+ document.querySelectorAll(`[data-texbg="${k}"]`).forEach(e=>e.style.backgroundImage=`url(${url})`);qBusy=false;if(QUEUE.length)pump();else saveTex()},{timeout:600})}
+const lazy=k=>{if(TEX[k])return TEX[k];if(!QUEUE.includes(k)){QUEUE.push(k);pump()}return BLANK};
+function tex(kind){return lazy(kind)}
+function texNow(kind){if(TEX[kind])return TEX[kind];const W=kind==='sun'?256:192,H=W/2;const c=document.createElement('canvas');c.width=W*2;c.height=H;const g=c.getContext('2d');const im=g.createImageData(W,H),f=PAINT[kind];
  for(let y=0;y<H;y++){const lat=(y/H)*2-1;for(let x=0;x<W;x++){const r=f(x/W,y/H,lat),i=(y*W+x)*4;im.data[i]=r[0];im.data[i+1]=r[1];im.data[i+2]=r[2];im.data[i+3]=r[3]==null?255:r[3]}}
  g.putImageData(im,0,0);g.putImageData(im,W,0);return TEX[kind]=c.toDataURL()}
-function stars(){if(TEX.stars)return TEX.stars;const c=document.createElement('canvas');c.width=680;c.height=400;const g=c.getContext('2d');let s=7;const r=()=>(s=(s*16807)%2147483647)/2147483647;
+function ringTex(now){if(TEX.ring)return TEX.ring;if(!now)return lazy('ring');const N=256,c=document.createElement('canvas');c.width=c.height=N;const g=c.getContext('2d'),im=g.createImageData(N,N),C=N/2;
+ /* radial profile, t = r / outer radius; planet edge sits at t=.40 */
+ const band=t=>{if(t<.50||t>.985)return null;let a,col;
+  if(t<.60){a=.10+(t-.5)*1.6;col=[150,135,112]}                  /* C ring – faint, dusty */
+  else if(t<.795){a=.78+Math.sin(t*180)*.08;col=[226,206,168]}     /* B ring – brightest */
+  else if(t<.83){a=.06;col=[90,80,66]}                             /* Cassini Division */
+  else if(t<.985){a=(t>.94&&t<.95)?.12:.55+Math.sin(t*240)*.07;col=[206,188,152]} /* A ring + Encke gap */
+  const grain=(h2((t*900)|0,7)-.5)*.14;return [col[0],col[1],col[2],Math.max(0,Math.min(1,a+grain))]};
+ for(let y=0;y<N;y++)for(let x=0;x<N;x++){const r=Math.hypot(x-C+.5,y-C+.5)/C,b=band(r),i=(y*N+x)*4;if(b){im.data[i]=b[0];im.data[i+1]=b[1];im.data[i+2]=b[2];im.data[i+3]=b[3]*255}}
+ g.putImageData(im,0,0);return TEX.ring=c.toDataURL()}
+function stars(now){if(TEX.stars)return TEX.stars;if(!now)return lazy('stars');const c=document.createElement('canvas');c.width=680;c.height=400;const g=c.getContext('2d');let s=7;const r=()=>(s=(s*16807)%2147483647)/2147483647;
  const neb=g.createRadialGradient(470,120,10,470,120,260);neb.addColorStop(0,'rgba(120,90,200,.18)');neb.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=neb;g.fillRect(0,0,680,400);
  const neb2=g.createRadialGradient(120,300,10,120,300,220);neb2.addColorStop(0,'rgba(40,120,200,.14)');neb2.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=neb2;g.fillRect(0,0,680,400);
  for(let i=0;i<260;i++){const x=r()*680,y=r()*400,m=r();g.fillStyle=`rgba(255,${235+r()*20|0},${220+r()*35|0},${.25+m*.6})`;g.beginPath();g.arc(x,y,m>.97?1.4:m>.85?.9:.55,0,7);g.fill()}return TEX.stars=c.toDataURL()}
@@ -38,7 +56,7 @@ function stars(){if(TEX.stars)return TEX.stars;const c=document.createElement('c
 const MP={'TUMI':['mercury','Mercury',7,30],'JP 5630':['venus','Venus',11,44],'SG 5010':['earth','Earth',12,40],'TW 5060':['mars','Mars',9,34],'TH 5640':['jupiter','Jupiter',24,70],'MY 5050':['saturn','Saturn',19,60],'KR 5040':['uranus','Uranus',14,50],'HK 5090':['neptune','Neptune',14,48]};
 X.MP=MP;
 function planet(kind,size,{lit='orbit',spin}={}){const s=spin||(kind==='jupiter'||kind==='saturn'?18:kind==='venus'?60:30);
- return `<span class="pz ${kind} lit-${lit}" style="--s:${size}px;--spin:${s}s">${kind==='saturn'?'<span class="pz-ring back"></span>':''}<span class="pz-clip"><img class="pz-tex" alt="" src="${tex(kind)}">${kind==='earth'?`<img class="pz-cloud" alt="" src="${tex('cloud')}">`:''}<span class="pz-shade"></span></span><span class="pz-atmo"></span>${kind==='saturn'?'<span class="pz-ring front"></span>':''}</span>`}
+ return `<span class="pz ${kind} lit-${lit}" style="--s:${size}px;--spin:${s}s">${kind==='saturn'?`<span class="pz-ring pz-rb" data-texbg="ring" style="background-image:url(${ringTex()})"></span>`:''}<span class="pz-clip"><img class="pz-tex" alt="" data-tex="${kind}" src="${tex(kind)}">${kind==='earth'?`<img class="pz-cloud" alt="" data-tex="cloud" src="${tex('cloud')}">`:''}<span class="pz-shade"></span>${kind==='saturn'?'<span class="pz-rshadow"></span>':''}</span><span class="pz-atmo"></span>${kind==='saturn'?`<span class="pz-ring pz-rf" data-texbg="ring" style="background-image:url(${ringTex()})"></span>`:''}</span>`}
 X.planet=planet;
 
 /* ---------------- 3. realistic orrery on home ---------------- */
@@ -47,12 +65,12 @@ const RAD=[44,60,77,93,114,136,152,166];
 const stOf=k=>{const b=BUS.find(x=>x.k===k)||{};const js=J.filter(j=>j.bu===k);const bad=b.st==='bad'||js.some(j=>j.st==='bad');const warn=!bad&&(b.i>0||js.some(j=>j.st==='warn'||j.st==='none'));
  return {s:bad?'bad':warn?'warn':'ok',open:REC.filter(r=>r.bu===k&&r.st==='Open').length,js:js.length,fail:js.filter(j=>j.st==='bad').length,name:b.m||k}};
 const lab=s=>s==='bad'?'Needs action':s==='warn'?'Watch':'Clean';
-function buildSystem(){const old=$('.orr');if(old)old.remove();const hero=$('.hero');const sys=document.createElement('div');sys.className='sys enter';sys.style.setProperty('--stars',`url(${stars()})`);
+function buildSystem(){const old=$('.orr');if(old)old.remove();const hero=$('.hero');const sys=document.createElement('div');sys.className='sys enter';sys.style.setProperty('--stars',`url(${stars()})`);sys.dataset.texbg='stars';
  const score=82;const cnt=s=>ORD.filter(k=>stOf(k).s===s).length;
  sys.innerHTML=`<div class="sys-sky"></div><div class="sys-stage"><div class="sys-plane">
   ${ORD.map((k,i)=>{const [kind,pn,sz]=MP[k],st=stOf(k),r=RAD[i],T=(14*Math.pow(r/44,1.5)).toFixed(1),ph=(-(i*0.618%1)*T).toFixed(2);
    return `<div class="sys-orbit" style="--r:${r}px;--T:${T}s;--ph:${ph}s"><div class="sys-arm"><button class="sys-p" data-k="${k}" aria-label="${k} (${pn}): ${lab(st.s)}, ${st.open} open records"><span class="sys-face">${planet(kind,Math.round(sz*1.35))}<span class="sys-tag"><i class="${st.s}"></i>${k.split(' ')[0]}</span></span></button></div></div>`}).join('')}
-  <div class="sys-sun"><span class="sun-glow"></span><span class="sun-corona"></span><span class="sun-disc"><img alt="" src="${tex('sun')}"><span class="sun-limb"></span></span></div>
+  <div class="sys-sun"><span class="sun-glow"></span><span class="sun-corona"></span><span class="sun-disc"><img alt="" data-tex="sun" src="${tex('sun')}"><span class="sun-limb"></span></span></div>
  </div></div>
  <div class="sys-cap"><b class="num">${score}</b><span>health</span><span class="sys-sep"></span><span><i class="ok"></i>${cnt('ok')} clean</span><span><i class="warn"></i>${cnt('warn')} watch</span><span><i class="bad"></i>${cnt('bad')} action</span></div>
  <div class="sys-card" aria-hidden="true"></div>`;
@@ -132,6 +150,17 @@ const menu=$('#menu');menu.insertAdjacentHTML('beforeend',`<h5>Density</h5><div 
 const setDen=v=>{document.body.dataset.density=v;$$('#denSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));LS.set('density',v)};$$('#denSeg button').forEach(b=>b.onclick=()=>setDen(b.dataset.v));setDen(LS.get('density','comfy'));
 PITEMS.push({n:'Help center',s:'faq glossary',f:()=>x_show('help')},{n:'Take the tour',s:'help onboarding',f:()=>x_tour()},{n:'Keyboard shortcuts',s:'help keys',f:()=>x_keys()});
 const _rp=window.renderP;window.renderP=function(){_rp();if(!$('#pin').value.trim()&&RECENT.length){const ul=$('#plist');ul.insertAdjacentHTML('afterbegin','<li style="pointer-events:none;color:var(--muted);font-size:11px">RECENTLY VIEWED</li>'+RECENT.slice(0,4).map((r,i)=>`<li data-rv="${i}"><span>${esc(r.t)}</span><small>recent</small></li>`).join(''));ul.querySelectorAll('li[data-rv]').forEach(li=>li.onclick=()=>{closeAll();new Function(RECENT[+li.dataset.rv].f)()})}};
+/* data-source badge: always say whether this is demo or live (read-only) data */
+{const L=window.SAMAT_LIVE;const b=document.createElement('span');b.className='pill src '+(L?'live':'demo');
+ b.innerHTML=L?`<span class="live"></span>Live · read-only${L.generatedAt?' · '+esc(L.generatedAt):''}`:'Demo data';
+ b.title=L?'Data exported from Prod with SELECT-only queries. Nothing is written back.':'Sample data for preview. Connect the local bot to see real Prod data.';
+ const tb=$('.topbar');tb.insertBefore(b,$('.pill.upd')||$('#agentPill'));}
+/* safety net: never show NaN / Infinity / undefined when live data is empty or partial */
+const BAD=/(-?Infinity|NaN|undefined)(%|s|m)?/g;let sTimer=0;
+function sanitize(){sTimer=0;const w=document.createTreeWalker(document.querySelector('.app')||document.body,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode()){if(BAD.test(n.nodeValue)){BAD.lastIndex=0;n.nodeValue=n.nodeValue.replace(BAD,'—')}BAD.lastIndex=0}
+ const dr=document.getElementById('drawer');if(dr){const w2=document.createTreeWalker(dr,NodeFilter.SHOW_TEXT);while(n=w2.nextNode()){if(BAD.test(n.nodeValue))n.nodeValue=n.nodeValue.replace(BAD,'—');BAD.lastIndex=0}}}
+const later=()=>{if(!sTimer)sTimer=setTimeout(sanitize,150)};
+['x_show','openDrawer','x_openJ','x_openInc','x_openRec','x_pf','x_report','x_calDay'].forEach(fn=>{const o=window[fn];if(o)window[fn]=function(){const r=o.apply(this,arguments);later();return r}});sanitize();
 const h=location.hash.slice(1);if(h==='help')setTimeout(()=>x_show('help'),80);
 setTimeout(()=>{const v=$('#viewHelp');if(v)X.charts&&0},0);
 })();

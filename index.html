@@ -536,7 +536,7 @@ pre.q .cp{position:absolute;right:8px;top:6px;cursor:pointer;color:var(--muted);
 .dag{width:100%;height:250px}
 .dag .nd rect{rx:12;transition:filter .2s}.dag .nd:hover rect{filter:brightness(1.35)}
 .dag text{font-size:11px;fill:var(--text);font-weight:600}.dag text.s{font-size:9.5px;fill:var(--muted);font-weight:500}
-.dag path.e{fill:none;stroke-width:2;stroke-dasharray:5 5;animation:dash 1s linear infinite}
+.dag path.e{fill:none;stroke-width:2;stroke-dasharray:5 5}.dag:hover path.e{animation:dash 1s linear infinite}
 @keyframes dash{to{stroke-dashoffset:-10}}
 .gantt{display:grid;grid-template-columns:130px 1fr;gap:5px 10px;font-size:11.5px;align-items:center}
 .gantt .gt{position:relative;height:18px;background:rgba(255,255,255,.05);border-radius:6px}
@@ -948,9 +948,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display"
 .pz.earth .pz-atmo{box-shadow:0 0 calc(var(--s)*.22) rgba(110,170,255,.45),inset 0 0 calc(var(--s)*.12) rgba(140,190,255,.35)}
 .pz.venus .pz-atmo{box-shadow:0 0 calc(var(--s)*.25) rgba(255,214,150,.35)}
 .pz.neptune .pz-atmo,.pz.uranus .pz-atmo{box-shadow:0 0 calc(var(--s)*.2) rgba(120,200,255,.35)}
-.pz-ring{position:absolute;left:50%;top:50%;width:calc(var(--s)*2.35);height:calc(var(--s)*.62);transform:translate(-50%,-50%) rotate(-16deg);border-radius:50%;pointer-events:none;
- background:radial-gradient(closest-side,transparent 62%,rgba(205,186,148,.75) 64%,rgba(232,214,176,.9) 72%,rgba(150,130,96,.35) 76%,rgba(226,206,166,.85) 80%,rgba(190,168,126,.55) 90%,transparent 100%)}
-.pz-ring.front{clip-path:inset(50% 0 0 0)}
+.pz-ring{position:absolute;left:50%;top:50%;width:calc(var(--s)*2.5);height:calc(var(--s)*2.5);background:center/100% 100% no-repeat;pointer-events:none;
+ transform:translate(-50%,-50%) rotate(-18deg) scaleY(.27)}
+.pz-rb{z-index:0}.pz-clip{z-index:1}.pz-rf{z-index:2;clip-path:inset(50% 0 0 0)}
+/* the rings cast a thin curved shadow across the planet's disc */
+.pz-rshadow{position:absolute;left:-20%;right:-20%;top:50%;height:calc(var(--s)*.11);transform:translateY(-10%) rotate(-18deg);border-radius:50%;
+ background:linear-gradient(rgba(0,0,0,0),rgba(20,14,6,.55) 40%,rgba(20,14,6,.55) 60%,rgba(0,0,0,0));pointer-events:none}
 /* ---- system container ---- */
 .sys{position:relative;width:360px;height:214px;flex:none;border-radius:20px;overflow:hidden;--line:rgba(255,255,255,.075)}
 .sys-sky{position:absolute;inset:0;background:var(--stars) center/cover,radial-gradient(ellipse at 50% 46%,#141a3a 0,#070a1c 60%,#03040c 100%);opacity:1}
@@ -1036,6 +1039,14 @@ details.faq:hover{background:rgba(255,255,255,.04)}
 [data-density="compact"] .jrow,[data-density="compact"] .up{padding:8px 10px}[data-density="compact"] main{gap:10px}
 [data-density="compact"] .rtbl td{padding:6px 9px}
 @media print{.toasts,.tour-spot,.tour-card,.ipop,.sys{display:none!important}.view[hidden]{display:none!important}}
+
+.pill.src{font-weight:700}.pill.src.demo{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 40%,transparent)}.pill.src.live{color:var(--ok)}.pill.src .live{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+/* placeholder colour while a texture is still being generated (first visit only) */
+.pz-clip{background:radial-gradient(circle at 35% 32%,var(--pzc1,#d9d4cc),var(--pzc2,#6b665f))}
+.pz.earth{--pzc1:#8fc2ff;--pzc2:#1d4f9c}.pz.mars{--pzc1:#e6a877;--pzc2:#8e3b1c}.pz.jupiter{--pzc1:#f1e3c5;--pzc2:#9b6d48}.pz.saturn{--pzc1:#f4e6c2;--pzc2:#b8945c}
+.pz.venus{--pzc1:#f4dfac;--pzc2:#a8743a}.pz.uranus{--pzc1:#d8fbff;--pzc2:#6cc6d6}.pz.neptune{--pzc1:#9fb3ff;--pzc2:#1d3a9e}
+.pz-tex,.pz-cloud,.sun-disc img{transition:opacity .5s}.pz-tex:not(.ready)[src^="data:image/gif"],.pz-cloud:not(.ready)[src^="data:image/gif"]{opacity:0}
+.sun-disc{background:radial-gradient(circle at 40% 38%,#fff6c8,#fbbf24 45%,#ea580c)}
 
 </style>
 </head>
@@ -1170,12 +1181,13 @@ details.faq:hover{background:rgba(255,255,255,.04)}
 <div class="banner glass" id="banner">🎉 All clear today — 19/19 business units clean</div>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
+<script src="data/live.js"></script>
 <script>
 const $=s=>document.querySelector(s);
 let celebLevel='on',motionOn=!matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- dummy data ---------- */
-const BUS=[
+const BUS=(window.SAMAT_LIVE&&window.SAMAT_LIVE.bus)||[
  {k:'SG 5010',m:'SAM Singapore',st:'bad',n:1,kn:0,i:0,c:0,f:4,t:'07:57',tr:[0,0,1,0,0,0,1],bell:1},
  {k:'HK 5090',m:'SAM Hong Kong',st:'ok',n:0,kn:0,i:0,c:0,f:8,t:'07:56',tr:[1,0,0,0,0,0,0],streak:7},
  {k:'TH 5640',m:'AT + SAM Thailand',st:'ok',n:0,kn:0,i:0,c:2,f:18,t:'00:15',tr:[2,1,0,1,0,0,0]},
@@ -1197,7 +1209,7 @@ const BUS=[
  {k:'Campaigns',m:'Per-campaign run checks',st:'bad',n:9,kn:149,i:44,c:1,f:12,t:'11:09',tr:[3,3,4,5,6,8,9],bell:3},
 ];
 const CHECKS=['Tier','Escrow','Return','Dup','No-contact','Neg bal','VJ','Campaign'];
-const KPIS=[
+const KPIS=(window.SAMAT_LIVE&&window.SAMAT_LIVE.kpis)||[
  {l:'New findings',v:46,d:'+12',good:false,tip:'Issues detected for the first time in today\'s runs. Lower is better.',tr:[30,28,35,40,34,38,46]},
  {l:'Known / decided',v:149,d:'+3',good:null,tip:'Findings already reviewed and decided. They stay visible until closed.',tr:[140,142,145,146,146,148,149]},
  {l:'Closed today',v:127,d:'+41',good:true,tip:'Findings verified as fixed today. Higher is better.',tr:[60,70,80,86,90,100,127]},
@@ -1205,7 +1217,7 @@ const KPIS=[
  {l:'Vouchers issued',v:564,d:'+8%',good:true,tip:'Vouchers created in the last 24h across programs.',tr:[480,500,520,510,530,540,564]},
  {l:'Vouchers expired',v:4964,d:'+3.1σ',good:false,tip:'Anomaly: 3.1× above the 30-day average. Check expiry batch.',tr:[1500,1600,1550,1700,1650,1600,4964],anom:true},
 ];
-const ATT=[
+const ATT=(window.SAMAT_LIVE&&window.SAMAT_LIVE.attention)||[
  {s:'bad',t:'No-contact members · 34 new',p:'All programs · first seen 15 Nov · 2 days open',tags:['All BUs','No-contact']},
  {s:'bad',t:'Campaigns · 9 new failed sends',p:'TH Black birthday voucher · reason: missing email',tags:['Campaigns']},
  {s:'bad',t:'KR 5040 · ATKR20240000505338 tier check',p:'Expect "Insider" after AT batch 02:30 UTC',tags:['KR 5040','Tier']},
@@ -1213,14 +1225,14 @@ const ATT=[
  {s:'warn',t:'SG 5010 · 1 new finding',p:'Tier downgrade candidate · verify after batch',tags:['SG 5010']},
  {s:'info',t:'Vouchers expired anomaly',p:'4,964 today vs 1,610 avg · TW 5060 heaviest',tags:['TW 5060','Anomaly']},
 ];
-const TODO=['Review 34 no-contact members','Verify KR tier after 02:30 UTC batch','Cancel TUMI MY outlet returns 10237136/37','Decide MY 5050 guest re-buy return','Load escrow release file for SSMY…1133'];
-const WATCH=[
+const TODO=(window.SAMAT_LIVE&&window.SAMAT_LIVE.todo)||['Review 34 no-contact members','Verify KR tier after 02:30 UTC batch','Cancel TUMI MY outlet returns 10237136/37','Decide MY 5050 guest re-buy return','Load escrow release file for SSMY…1133'];
+const WATCH=(window.SAMAT_LIVE&&window.SAMAT_LIVE.watch)||[
  ['SSMY20250001831133','MY 5050','Black ends 2026-11-23 · would downgrade (stuck escrow)','23 Nov','Load Escrow_Stuck release file, verify renewal','Waiting user',false],
  ['ATKR20240000505338','KR 5040','After AT batch expect tier Insider','16 Nov','Verify lifecycle "Downgrade Insider"','Waiting batch',false],
  ['TUMY20230001018426','MY 5050','Outlet returns 10237136 + 10237137 still Pending','15 Nov','Valuehub to cancel via OutletReturn_CANCEL file','Open',true],
  ['SSMY20250001680063','MY 5050','Guest re-buy return 49818 processed −3,002 pts','15 Nov','User decision pending','Waiting user',true],
 ];
-let NOTIFS=[
+let NOTIFS=(window.SAMAT_LIVE&&window.SAMAT_LIVE.notifications)||[
  {id:1,s:'bad',cat:'critical',t:'You have a new notification: No-contact members – 34 new findings',p:'All programs · open the list to review contacts.',g:'Today',ago:'12 min ago',u:true},
  {id:2,s:'bad',cat:'campaigns',t:'You have a new notification: TH Black Birthday campaign failed – 41 records (Missing email)',p:'Failing 3 runs in a row · open issues list.',g:'Today',ago:'1 h ago',u:true},
  {id:3,s:'info',cat:'runs',t:'KR 5040 run finished – 1 check, 0 failed',p:'611 s · output Daily_Summary.txt',g:'Today',ago:'2 h ago',u:true},
@@ -1290,7 +1302,7 @@ renderTodo();
 
 /* ---------- market pulse ---------- */
 const CHK_COL={Tier:'#0A84FF',Escrow:'#BF5AF2',Campaign:'#FF453A','No-contact':'#FF9F0A',Returns:'#64D2FF',Vouchers:'#FFD60A',Other:'#8E8E93'};
-const PULSE=[
+const PULSE=(window.SAMAT_LIVE&&window.SAMAT_LIVE.pulse)||[
  {k:'TH 5640',m:'AT + SAM Thailand',seg:{Campaign:41,'No-contact':9,Tier:2},tr:[20,24,30,35,40,46,52],d:'+12',r:'Birthday campaign failing — missing email'},
  {k:'MY 5050',m:'SAM + AT Malaysia',seg:{Escrow:6,Returns:4,Campaign:9,Vouchers:3},tr:[30,28,26,25,24,23,22],d:'−3',r:'Stuck escrow + outlet returns pending'},
  {k:'KR 5040',m:'SAM + AT Korea',seg:{Tier:8,Campaign:6,'No-contact':4},tr:[24,22,20,21,19,18,18],d:'0',r:'Tier recalculation waiting for AT batch'},
@@ -1348,7 +1360,7 @@ const REASONS={'Missing email':{c:'#FF453A',fix:'Member has no email/contact poi
  'Journal not created':{c:'#64D2FF',fix:'The DPE did not create the journal. Check the DPE run history and the batch job log for the campaign run time.'},
  'Tier mismatch':{c:'#FFD60A',fix:'Member tier changed after targeting. Re-run after the tier batch (02:30 UTC) and verify.'},
  'API timeout':{c:'#8E8E93',fix:'Transient callout timeout. If more than 5%, check the integration log and retry the run.'}};
-const CAMPS=[
+const CAMPS=(window.SAMAT_LIVE&&window.SAMAT_LIVE.campaigns)||[
  {id:1,n:'TH Black Birthday Voucher',bu:'TH 5640',p:'SAM',t:'Birthday',sch:'Daily 06:30',tg:212,sent:171,fail:41,skip:0,r:{'Missing email':38,'Invalid member status':3},streak:3,since:'14 Nov',st:'fail',tri:'Investigating',new:false},
  {id:2,n:'SG Welcome Voucher – New Navy',bu:'SG 5010',p:'SAM',t:'Welcome',sch:'Daily 06:30',tg:58,sent:52,fail:6,skip:0,r:{'Voucher def expired':6},streak:1,since:'16 Nov',st:'fail',tri:'New',new:true},
  {id:3,n:'MY Year-round Silver Voucher',bu:'MY 5050',p:'AT',t:'Year-round',sch:'Monthly',tg:140,sent:131,fail:9,skip:0,r:{'Journal not created':5,'Missing email':4},streak:2,since:'15 Nov',st:'partial',tri:'Waiting fix',new:false},
@@ -1583,6 +1595,7 @@ document.addEventListener('visibilitychange',()=>document.querySelectorAll('.blo
    Journeys monitor · Root-cause center · Record explorer · Data ops · live alerts · record-level drawers · animals
    All data is deterministic demo data (seeded) shaped like the real bot outputs. */
 (function(){
+const LIVE=window.SAMAT_LIVE||null;
 const $$=s=>[...document.querySelectorAll(s)];
 let seed=20261116;const rnd=()=>{seed=(seed*1664525+1013904223)%4294967296;return seed/4294967296};
 const pick=a=>a[Math.floor(rnd()*a.length)];
@@ -1642,7 +1655,7 @@ const ERRK=Object.keys(ERR);
 /* ---------------- journeys ---------------- */
 const STEPS={birthday:['Entry','Eligibility','Issue voucher','Email','Delivered','Opened'],welcome:['Entry','Create member','Welcome pts','Email','SMS','Delivered'],
  tier:['Entry','Tier check','Decision split','Benefit','Email','Delivered'],expiry:['Entry','Points calc','Reminder email','Push','Delivered'],reactivate:['Entry','Wait 2d','Offer voucher','Email','Delivered','Redeemed']};
-const J=[
+const J=(LIVE&&LIVE.journeys)||[
  {id:'J1',n:'TH Black Birthday voucher',bu:'TH 5640',p:'SAM',k:'birthday',st:'bad',in:1240,fs:3,err:{E_NO_CONTACT:41,E_CONSENT:6},streak:3,own:'TH CRM'},
  {id:'J2',n:'SG Welcome series',bu:'SG 5010',p:'SAM',k:'welcome',st:'bad',in:860,fs:2,err:{E_VDEF_EXPIRED:212},streak:2,own:'SG CRM'},
  {id:'J3',n:'MY Points expiry reminder',bu:'MY 5050',p:'AT',k:'expiry',st:'warn',in:3120,fs:2,err:{E_TIMEOUT:58,E_NO_CONTACT:9},streak:1,own:'MY CRM'},
@@ -1658,7 +1671,7 @@ const J=[
  {id:'J13',n:'TW Birthday voucher',bu:'TW 5060',p:'AT',k:'birthday',st:'ok',in:690,fs:-1,err:{},streak:0,own:'TW CRM'},
  {id:'J14',n:'HK Lapsed win-back',bu:'HK 5090',p:'SAM',k:'reactivate',st:'warn',in:1310,fs:3,err:{E_TIMEOUT:27},streak:1,own:'HK CRM'},
 ];
-J.forEach(j=>{const steps=STEPS[j.k];const fails=Object.values(j.err).reduce((a,b)=>a+b,0);j.fail=fails;let cur=j.in;
+J.forEach(j=>{j.err=j.err||{};const steps=STEPS[j.k]||j.steps||['Entry','Process','Send','Delivered'];if(j.fs==null)j.fs=-1;j.in=+j.in||0;const fails=Object.values(j.err).reduce((a,b)=>a+b,0);j.fail=fails;let cur=j.in;
  j.sc=steps.map((s,i)=>{if(i>0){const drop=i===j.fs?fails:Math.round(cur*(s==='Opened'?.55:s==='Redeemed'?.8:s==='Delivered'?.01:.02*rnd()));cur=Math.max(0,cur-drop)}return {s,c:cur}});
  j.sr=j.in?(1-fails/j.in)*100:0;j.tr=Array.from({length:14},(_,i)=>Math.max(0,Math.round((i>=14-Math.max(j.streak,1)&&j.fail?j.fail*(.7+rnd()*.5):j.fail*.05*rnd())+rnd()*3)));
  j.last=j.st==='none'?'—':`16 Nov ${String(5+Math.floor(rnd()*4)).padStart(2,'0')}:${String(Math.floor(rnd()*60)).padStart(2,'0')}`;
@@ -1670,7 +1683,8 @@ const FN=['Ananya','Wei','Somchai','Mei','Haruto','Ji-woo','Siti','Arjun','Lim',
 const LN=['Tan','Chen','Wong','Lee','Kim','Sato','Lim','Rahman','Park','Suzuki','Ng','Chua','Ong'];
 const BUP={'TH 5640':'TH','SG 5010':'SG','MY 5050':'MY','KR 5040':'KR','HK 5090':'HK','TW 5060':'TW','JP 5630':'JP','TUMI':'TU'};
 const REC=[];let rid=0;
-J.forEach(j=>Object.entries(j.err).forEach(([code,n])=>{for(let i=0;i<n;i++){rid++;const pre=(j.p==='AT'?'AT':j.p==='TUMI'?'TU':'SS')+BUP[j.bu];
+if(LIVE&&LIVE.records){LIVE.records.forEach(r=>REC.push(Object.assign({retry:0,st:'Open',src:'Journey',sev:'warn',tier:'',email:'',name:'',step:'',jn:'',j:'CHK',tsn:0,ts:''},r)))}
+else J.forEach(j=>Object.entries(j.err).forEach(([code,n])=>{for(let i=0;i<n;i++){rid++;const pre=(j.p==='AT'?'AT':j.p==='TUMI'?'TU':'SS')+BUP[j.bu];
  const h=5+Math.floor(rnd()*5),m=Math.floor(rnd()*60);const first=FN[Math.floor(rnd()*FN.length)],last=LN[Math.floor(rnd()*LN.length)];
  REC.push({id:pre+'2025'+String(1000000+Math.floor(rnd()*8999999)),name:first+' '+last,email:code==='E_NO_CONTACT'?'—':(first[0]+'***'+'@'+pick(['gmail.com','yahoo.com','hotmail.com'])).toLowerCase(),
  j:j.id,jn:j.n,bu:j.bu,step:j.sc[Math.max(1,j.fs)].s,code,tier:pick(TIERS),ts:`16 Nov ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`,tsn:h*60+m,
@@ -1682,7 +1696,7 @@ const CHKERR={ESCROW_STUCK:{t:'Escrow past release date',c:'#BF5AF2',rc:'Escrow 
  TIER_DOWNGRADE:{t:'Tier downgrade candidate',c:'#0A84FF',rc:'Qualifying spend fell under the Silver threshold after a return.',fix:['Confirm the return in the transaction journal','Verify after tonight\'s batch']},
  RETURN_GT_SALE:{t:'Return amount greater than sale',c:'#64D2FF',rc:'Offline return was keyed with the gross amount including tax twice.',fix:['Ask the store to correct the return','Reverse the extra points (change ticket)']},
  ESCROW_AT_EXPIRY:{t:'Escrow at tier expiry',c:'#BF5AF2',rc:'Tier ends while points are still in escrow; the member would drop a tier.',fix:['Release escrow before the tier end date']}};
-CHK.forEach(([chk,code,n,bu])=>{for(let i=0;i<n;i++){rid++;const b=bu==='All BUs'?pick(['TH 5640','SG 5010','MY 5050','HK 5090','KR 5040']):bu;const h=6+Math.floor(rnd()*3),m=Math.floor(rnd()*60);
+if(!(LIVE&&LIVE.records))CHK.forEach(([chk,code,n,bu])=>{for(let i=0;i<n;i++){rid++;const b=bu==='All BUs'?pick(['TH 5640','SG 5010','MY 5050','HK 5090','KR 5040']):bu;const h=6+Math.floor(rnd()*3),m=Math.floor(rnd()*60);
  REC.push({id:'SS'+BUP[b]+'2025'+String(1000000+Math.floor(rnd()*8999999)),name:pick(FN)+' '+pick(LN),email:code==='E_NO_CONTACT'?'—':'h***@gmail.com',j:'CHK',jn:'Daily check · '+chk,bu:b,step:'Daily check',code,tier:pick(TIERS),
  ts:`16 Nov ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`,tsn:h*60+m,retry:0,st:'Open',src:'Daily check',sev:'bad'})}});
 const errInfo=c=>ERR[c]||CHKERR[c]||{t:c,c:'#8E8E93',rc:'',fix:[]};
@@ -1691,6 +1705,7 @@ const errInfo=c=>ERR[c]||CHKERR[c]||{t:c,c:'#8E8E93',rc:'',fix:[]};
 const INC=ERRK.map(code=>{const recs=REC.filter(r=>r.code===code);const js=[...new Set(recs.map(r=>r.j))].filter(x=>x!=='CHK');const bus=[...new Set(recs.map(r=>r.bu))];
  return {code,recs:recs.length,js,bus,first:recs.length?recs.reduce((a,r)=>r.tsn<a.tsn?r:a).ts:'—',sev:code==='E_CONSENT'?'info':recs.length>100?'bad':recs.length>40?'bad':'warn',conf:{E_NO_CONTACT:94,E_VDEF_EXPIRED:98,E_MEMBER_INACTIVE:87,E_DPE_NO_JOURNAL:91,E_TIER_CHANGED:76,E_TIMEOUT:89,E_CONSENT:99}[code]}}).filter(i=>i.recs).sort((a,b)=>b.recs-a.recs);
 
+const INC0={code:'E_CONSENT',recs:0,js:[],bus:[],conf:0,sev:'info',first:'—'};
 /* ---------------- DOM: views ---------------- */
 const main=document.querySelector('main');const foot=document.querySelector('.footer-note');
 const mk=(id,html)=>{const v=document.createElement('div');v.className='view';v.id=id;v.hidden=true;v.innerHTML=html;main.insertBefore(v,foot);return v};
@@ -1718,7 +1733,7 @@ mk('viewRca',`
  <p>Failures are grouped by their underlying cause, not by journey. Fix one cause and it clears every journey and record it affects. Each incident has evidence, a 5-whys chain, a confidence score and a fix playbook.</p></div>
  <div style="display:flex;gap:8px"><button class="btn" onclick="x_copyRca()">⧉ Copy incident summary</button></div></section>
  <section class="x-kpis">${kpiH('Open incidents',INC.filter(i=>i.sev!=='info').length,'distinct root causes','bad')}${kpiH('Records impacted',INC.reduce((a,i)=>a+i.recs,0),'across journeys + checks')}
- ${kpiH('Journeys affected',new Set(INC.flatMap(i=>i.js)).size,'of '+J.length)}${kpiH('Top cause share',Math.round(INC[0].recs/INC.reduce((a,i)=>a+i.recs,0)*100)+'%',errInfo(INC[0].code).t,'warn')}${kpiH('Avg confidence',Math.round(INC.reduce((a,i)=>a+i.conf,0)/INC.length)+'%','evidence-based')}</section>
+ ${kpiH('Journeys affected',new Set(INC.flatMap(i=>i.js)).size,'of '+J.length)}${kpiH('Top cause share',Math.round((INC[0]||INC0).recs/INC.reduce((a,i)=>a+i.recs,0)*100)+'%',errInfo((INC[0]||INC0).code).t,'warn')}${kpiH('Avg confidence',Math.round(INC.reduce((a,i)=>a+i.conf,0)/(INC.length||1))+'%','evidence-based')}</section>
  <section class="x-grid3" id="incs"></section>
  <section class="panel solid"><h4>⏱ Event timeline · 16 Nov (UTC) <small>failures lined up against batches, deploys and upstream events</small></h4><div class="tl" id="tl"></div></section>
  <section class="x-grid2"><div class="panel solid"><h4>🌐 Blast radius <small>cause → journeys → BUs</small></h4><div id="blast"></div></div>
@@ -1784,7 +1799,7 @@ function renderJ(){
   <div class="legend" style="flex-direction:row;flex-wrap:wrap;gap:4px 12px">${ERRK.map(c=>`<div><i style="background:${ERR[c].c}"></i>${ERR[c].t}</div>`).join('')}</div>`;
  const rs={};REC.filter(r=>r.src==='Journey').forEach(r=>rs[r.code]=(rs[r.code]||0)+1);const rmx=Math.max(...Object.values(rs));
  $('#jreason').innerHTML=Object.entries(rs).sort((a,b)=>b[1]-a[1]).map(([c,v],i)=>`<div class="rbar" style="cursor:pointer;grid-template-columns:190px 1fr 46px" onclick="x_recFilter('code','${c}')"><span>${ERR[c].t}</span><span class="t"><i style="width:${v/rmx*100}%;background:${ERR[c].c};animation-delay:${i*60}ms"></i></span><b class="num">${v}</b></div>`).join('')
-  +`<div class="fix">💡 <b>${ERR[INC[0].code].t}</b> alone explains ${Math.round(INC[0].recs/REC.length*100)}% of all failed records. Fix it first — <a style="color:var(--info);cursor:pointer;font-weight:600" onclick="x_openInc('${INC[0].code}')">open playbook →</a></div>`;
+  +`<div class="fix">💡 <b>${ERR[(INC[0]||INC0).code].t}</b> alone explains ${Math.round((INC[0]||INC0).recs/(REC.length||1)*100)}% of all failed records. Fix it first — <a style="color:var(--info);cursor:pointer;font-weight:600" onclick="x_openInc('${(INC[0]||INC0).code}')">open playbook →</a></div>`;
  // heat
  const days=[...Array(14)].map((_,i)=>{const d=new Date(2026,10,3+i);return d.getDate()+'/'+(d.getMonth()+1)});
  const hcol=v=>v===0?'rgba(48,209,88,.25)':v<10?'rgba(255,214,10,.35)':v<50?'rgba(255,159,10,.55)':'rgba(255,69,58,.75)';
@@ -1955,17 +1970,17 @@ window.openDrawer=function(b){if(!b)return;$('#drawer').classList.remove('wide')
  d.appendChild(box);bindRecRows(box)};
 
 /* ---------------- live notifications: new failures arrive ---------------- */
-NOTIFS.unshift({id:101,s:'bad',cat:'campaigns',t:'Root cause found: Voucher definition expired – 308 records in 2 SG journeys',p:'98% confidence · owner Loyalty admin · open playbook',g:'Today',ago:'5 min ago',u:true,x:()=>x_openInc('E_VDEF_EXPIRED')},
+if(!LIVE)NOTIFS.unshift({id:101,s:'bad',cat:'campaigns',t:'Root cause found: Voucher definition expired – 308 records in 2 SG journeys',p:'98% confidence · owner Loyalty admin · open playbook',g:'Today',ago:'5 min ago',u:true,x:()=>x_openInc('E_VDEF_EXPIRED')},
  {id:102,s:'bad',cat:'campaigns',t:'KR Tier upgrade congrats failing 4 runs in a row',p:'Tier changed during journey + DPE journal missing',g:'Today',ago:'20 min ago',u:true,x:()=>x_openJ('J4')},
  {id:103,s:'warn',cat:'runs',t:'Journey not run: MY Black renewal reminder',p:'Entry DE was empty – upstream export did not run',g:'Today',ago:'40 min ago',u:true,x:()=>x_openJ('J10')});
 const _ofn=window.openFromN;window.openFromN=function(id){const n=NOTIFS.find(x=>x.id===id);if(n&&n.x){readN(id);togglePanel(false);n.x();return}_ofn(id)};
 updateBell(true);
-const LIVE=[['J3','E_TIMEOUT','MY Points expiry reminder: 12 new API timeouts'],['J1','E_NO_CONTACT','TH Black Birthday: 5 more members without email'],['J14','E_TIMEOUT','HK Lapsed win-back: timeout rate 2.4% (> 2% rule)'],['J6','E_MEMBER_INACTIVE','TW Reactivation: 3 merged members failed update']];
-let li=0;function liveTick(){if(document.hidden)return;const [jid,code,msg]=LIVE[li++%LIVE.length];const nid=200+li;
+const FEED=[['J3','E_TIMEOUT','MY Points expiry reminder: 12 new API timeouts'],['J1','E_NO_CONTACT','TH Black Birthday: 5 more members without email'],['J14','E_TIMEOUT','HK Lapsed win-back: timeout rate 2.4% (> 2% rule)'],['J6','E_MEMBER_INACTIVE','TW Reactivation: 3 merged members failed update']];
+let li=0;function liveTick(){if(document.hidden)return;const [jid,code,msg]=FEED[li++%FEED.length];const nid=200+li;
  NOTIFS.unshift({id:nid,s:'bad',cat:'campaigns',t:'New failure: '+msg,p:ERR[code].t+' · likely cause: '+ERR[code].rc.split('. ')[0],g:'Today',ago:'just now',u:true,x:()=>x_openJ(jid)});
  updateBell(true);const b=$('#bellBtn');b.classList.remove('ring-anim');void b.offsetWidth;b.classList.add('ring-anim');
  toast('⛔','New journey failure',msg,'bad',()=>x_openJ(jid))}
-setTimeout(()=>{liveTick();setInterval(liveTick,45000)},9000);
+if(!LIVE)setTimeout(()=>{liveTick();setInterval(liveTick,45000)},9000);
 
 /* ---------------- palette entries ---------------- */
 PITEMS.push({n:'Journeys & campaigns',s:'journey monitor',f:()=>x_show('journeys')},{n:'Root-cause center',s:'rca incidents',f:()=>x_show('rca')},{n:'Record explorer',s:'failed records',f:()=>x_show('records')},{n:'Data ops',s:'pipeline freshness quality',f:()=>x_show('ops')},
@@ -2024,6 +2039,7 @@ Object.keys(ERR).forEach(code=>{const js=J.filter(j=>j.err[code]);if(!js.length)
  const days=DAYS.slice(DAYS.length-n-1,DAYS.length-1);
  HIST[code]=days.map((d,i)=>{const j=js[(i+1)%js.length];const recs=Math.max(3,Math.round(j.err[code]*(.4+rnd()*.8)));const pre=REC.find(r=>r.j===j.id&&r.code===code);const p=pre?pre.id.slice(0,9):'SSSG2025';
   return {d,t:`${String(5+Math.floor(rnd()*4)).padStart(2,'0')}:${String(Math.floor(rnd()*60)).padStart(2,'0')}`,j:j.id,jn:j.n,bu:j.bu,recs,ids:[0,1,2].map(()=>p+String(1000000+Math.floor(rnd()*8999999)).slice(0,7)),fix:FIXED[code],mttr:`${1+Math.floor(rnd()*5)}h ${Math.floor(rnd()*60)}m`,held:1+Math.floor(rnd()*5)}})});
+if(window.SAMAT_LIVE&&window.SAMAT_LIVE.history){Object.keys(HIST).forEach(k=>delete HIST[k]);Object.assign(HIST,window.SAMAT_LIVE.history)}
 const rep=code=>HIST[code]||[];
 const jRep=j=>Object.keys(j.err).filter(c=>rep(c).length).map(c=>({c,h:rep(c),same:rep(c).filter(o=>o.j===j.id)}));
 function repBlock(code,curJ){const H=rep(code);if(!H.length)return'';const E=ERR[code];const last=H[H.length-1];const sameJ=curJ?H.filter(o=>o.j===curJ.id):[];
@@ -2060,7 +2076,7 @@ const PCHK=[
  {k:'status',n:'Members still active (not merged)',code:'E_MEMBER_INACTIVE'},{k:'dpe',n:'Upstream DPE / tier batch completed',code:'E_DPE_NO_JOURNAL'},{k:'api',n:'Marketing Cloud API healthy (p95 latency)',code:'E_TIMEOUT'},
  {k:'entry',n:'Entry data extension populated',code:null},{k:'freq',n:'No member gets > 3 messages in 24 h',code:null}];
 function nextAt(hhmm){const [h,m]=hhmm.split(':').map(Number);const n=new Date();const t=new Date(n);t.setHours(h,m,0,0);if(t<=n)t.setDate(t.getDate()+1);return t}
-const UP=SCHED.map(([id,t])=>{const j=J.find(x=>x.id===id);const aud=Math.round((j.in||900)*(.9+rnd()*.25));const checks=PCHK.map(c=>{let n=0,st='p',note='';
+const UP=((window.SAMAT_LIVE&&window.SAMAT_LIVE.schedule)||SCHED).filter(([id])=>J.some(x=>x.id===id)).map(([id,t])=>{const j=J.find(x=>x.id===id);const aud=Math.round((j.in||900)*(.9+rnd()*.25));const checks=PCHK.map(c=>{let n=0,st='p',note='';
  if(c.code&&j.err[c.code]){n=Math.round(j.err[c.code]*(aud/(j.in||aud))*(c.code==='E_TIMEOUT'?.4:1.05));st=c.code==='E_CONSENT'?'w':'f'}
  if(c.k==='vdef'&&j.err.E_VDEF_EXPIRED){n=Math.round(aud*.86);note='Definition expired 14 Nov – every voucher issue will fail'}
  if(c.k==='entry'&&j.notrun){st='f';note='Entry DE is empty – journey will send nothing';n=0}
@@ -2150,7 +2166,7 @@ ASK
 window.x_digest=()=>{copy(digestText());toast('⧉','Daily digest copied','Paste into Teams or email','ok')};
 RENDER.insights=function(){
  $('#inK').innerHTML=kpiH('Failure rate this week','3.9%','was 2.6% last week','bad')+kpiH('Repeat causes',Object.keys(HIST).length,'seen before','warn')+kpiH('Median time to fix','2h 05m','−18 min vs last week','ok')+kpiH('Fixes that held > 7 d','38%','permanent fixes needed','warn')+kpiH('SLA met',92,'% of runs on time');countAll($('#inK'));
- const M={};REC.forEach(r=>M[r.bu]=(M[r.bu]||0)+1);const ent=Object.entries(M).sort((a,b)=>b[1]-a[1]).slice(0,9);const mx=ent[0][1];
+ const M={};REC.forEach(r=>M[r.bu]=(M[r.bu]||0)+1);const ent=Object.entries(M).sort((a,b)=>b[1]-a[1]).slice(0,9);const mx=ent.length?ent[0][1]:1;
  $('#city').innerHTML='<div class="floor"></div>'+ent.map(([b,n],i)=>{const x=30+(i%3)*110,y=30+Math.floor(i/3)*110,h=Math.max(14,n/mx*120),c=n>150?'#FF453A':n>60?'#FF9F0A':n>20?'#FFD60A':'#30D158';
   return `<div class="tw" style="left:${x}px;top:${y}px;--h:${h}px;--c:${c};animation-delay:${i*80}ms" title="${b}: ${n} records" onclick="x_recFilter('bu','${b}')"><div class="f fa"></div><div class="f fb"></div><div class="f tp"></div><div class="vl">${n}</div><div class="lb">${b}</div></div>`}).join('');
  const W=[1.4,1.1,1.8,1.3,2.2,1.9,2.6,3.9];const w=560,h=180,X=i=>30+i*(w-50)/7,Y=v=>h-24-v/4.5*(h-40);
@@ -2160,7 +2176,7 @@ RENDER.insights=function(){
   ${W.map((v,i)=>`<circle cx="${X(i)}" cy="${Y(v)}" r="${i===7?6:3.5}" fill="#FF453A"><title>W${39+i}: ${v}%</title></circle><text x="${X(i)}" y="${h-6}" font-size="10" fill="var(--muted)" text-anchor="middle">W${39+i}</text>`).join('')}
   <text x="${X(7)-8}" y="${Y(3.9)-10}" font-size="11" font-weight="700" fill="var(--bad-t)" text-anchor="end">3.9% ↑ +1.3 pts</text></svg>
   <div class="fix">🧠 The jump since W44 is driven by <b>one cause</b>: Voucher definition expired (SG) adds 2.0 pts. Without it the rate would be 1.9%.</div>`;
- const L=Object.entries(HIST).sort((a,b)=>b[1].length-a[1].length);const lm=L[0][1].length+1;
+ const L=Object.entries(HIST).sort((a,b)=>b[1].length-a[1].length);const lm=L.length?L[0][1].length+1:1;
  $('#lead').innerHTML=L.map(([c,H],i)=>`<div class="rbar" style="grid-template-columns:200px 1fr 70px;cursor:pointer" onclick="x_openInc('${c}')"><span>${ERR[c].t}</span><span class="t"><i style="width:${(H.length+1)/lm*100}%;background:linear-gradient(90deg,#7c3aed,#db2777);animation-delay:${i*60}ms"></i></span><b>${H.length+1}× <small style="color:var(--muted);font-weight:500">${H[H.length-1].d}</small></b></div>`).join('');
  const MT=[['Voucher definition expired',310],['Missing email / contact point',1440],['Journal not created (DPE)',190],['API timeout to Marketing Cloud',75],['Member inactive / merged',260],['Tier changed during journey',380]];const mm=Math.max(...MT.map(x=>x[1]));
  $('#mttr').innerHTML=MT.map(([n,m],i)=>`<div class="rbar" style="grid-template-columns:200px 1fr 70px"><span>${n}</span><span class="t"><i style="width:${m/mm*100}%;background:${m>600?'var(--bad)':m>240?'var(--warn)':'var(--ok)'};animation-delay:${i*60}ms"></i></span><b>${m>=60?Math.floor(m/60)+'h '+m%60+'m':m+'m'}</b></div>`).join('')+'<div class="fix">Missing email takes a full day because it waits for the CRM data team load. A POS-side fix removes it entirely.</div>';
@@ -2235,7 +2251,8 @@ const _rn=window.renderN;window.renderN=function(){_rn();const list=NOTIFS.filte
 document.documentElement.style.setProperty('--tick-dur','200s');
 
 /* ---------- charts (SVG, no libs) ---------- */
-function barChart(data,{h=220,stack=[['p','#64D2FF','Processed'],['c','#FF453A','Cancelled']],labels,avg=true}={}){
+function barChart(data,o){if(!data||!data.length)return '<div class="empty"><div class="ic">🦉</div>No data yet</div>';return barChart_(data,o)}
+function barChart_(data,{h=220,stack=[['p','#64D2FF','Processed'],['c','#FF453A','Cancelled']],labels,avg=true}={}){
  const W=960,P={l:40,r:12,t:14,b:26},n=data.length,mx=Math.max(1,...data.map(d=>stack.reduce((a,[k])=>a+d[k],0)));const top=Math.ceil(mx/5)*5||5;
  const bw=(W-P.l-P.r)/n,Y=v=>P.t+(h-P.t-P.b)*(1-v/top);let s=`<svg viewBox="0 0 ${W} ${h}" style="width:100%;height:${h}px" class="chart">`;
  for(let i=0;i<=4;i++){const v=top*i/4,y=Y(v);s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${y}" y2="${y}" stroke="currentColor" opacity=".08"/><text x="${P.l-8}" y="${y+4}" font-size="10" fill="var(--muted)" text-anchor="end">${Math.round(v)}</text>`}
@@ -2243,12 +2260,13 @@ function barChart(data,{h=220,stack=[['p','#64D2FF','Processed'],['c','#FF453A',
   if(labels&&(i%5===0||i===n-1))s+=`<text x="${P.l+i*bw+bw/2}" y="${h-8}" font-size="10" fill="var(--muted)" text-anchor="middle">${labels[i]}</text>`});
  if(avg){const a=data.reduce((x,d)=>x+stack.reduce((q,[k])=>q+d[k],0),0)/n;s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${Y(a)}" y2="${Y(a)}" stroke="var(--warn)" stroke-dasharray="5 5" opacity=".8"/><text x="${W-P.r}" y="${Y(a)-5}" font-size="10" fill="var(--warn)" text-anchor="end">avg ${a.toFixed(1)}/day</text>`}
  return s+'</svg>'+`<div class="legend-row">${stack.map(([k,c,l])=>`<span><i style="background:${c}"></i>${l}</span>`).join('')}${avg?'<span><i style="background:var(--warn)"></i>30-day average</span>':''}</div>`}
-function lineChart(vals,{h=150,col='#FF453A',labels,unit=''}={}){const W=460,P={l:34,r:14,t:16,b:24},mx=Math.max(3,Math.ceil(Math.max(...vals)*1.15)),X2=i=>P.l+i*(W-P.l-P.r)/(vals.length-1),Y=v=>P.t+(h-P.t-P.b)*(1-v/mx);
+function lineChart(vals,o){if(!vals||vals.length<2)return '<div class="empty"><div class="ic">🦉</div>Not enough data yet</div>';return lineChart_(vals,o)}
+function lineChart_(vals,{h=150,col='#FF453A',labels,unit=''}={}){const W=460,P={l:34,r:14,t:16,b:24},mx=Math.max(3,Math.ceil(Math.max(...vals)*1.15)),X2=i=>P.l+i*(W-P.l-P.r)/(vals.length-1),Y=v=>P.t+(h-P.t-P.b)*(1-v/mx);
  const d=vals.map((v,i)=>(i?'L':'M')+X2(i).toFixed(1)+' '+Y(v).toFixed(1)).join(' ');let s=`<svg viewBox="0 0 ${W} ${h}" style="width:100%;height:${h}px">`;
  for(let i=0;i<=3;i++){const v=mx*i/3;s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="currentColor" opacity=".08"/><text x="${P.l-6}" y="${Y(v)+4}" font-size="10" fill="var(--muted)" text-anchor="end">${Math.round(v)}</text>`}
  s+=`<path d="${d} L${X2(vals.length-1)} ${Y(0)} L${X2(0)} ${Y(0)}Z" fill="${col}" opacity=".12"/><path d="${d}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round" style="stroke-dasharray:1500;stroke-dashoffset:1500;animation:draw 1.3s forwards"/>`;
  vals.forEach((v,i)=>{s+=`<circle cx="${X2(i)}" cy="${Y(v)}" r="3.5" fill="${col}"><title>${labels?labels[i]+': ':''}${v}${unit}</title></circle>`;if(labels)s+=`<text x="${X2(i)}" y="${h-6}" font-size="10" fill="var(--muted)" text-anchor="middle">${labels[i]}</text>`});return s+'</svg>'}
-function pareto(items){/* items: [label,value,color] sorted desc */const W=560,h=240,P={l:36,r:40,t:16,b:70},n=items.length,tot=items.reduce((a,x)=>a+x[1],0),mx=items[0][1];
+function pareto(items){if(!items.length)return '<div class="empty"><div class="ic">🦉</div>No failures to rank</div>';/* items: [label,value,color] sorted desc */const W=560,h=240,P={l:36,r:40,t:16,b:70},n=items.length,tot=items.reduce((a,x)=>a+x[1],0),mx=items[0][1];
  const bw=(W-P.l-P.r)/n,Y=v=>P.t+(h-P.t-P.b)*(1-v/mx),Yp=p=>P.t+(h-P.t-P.b)*(1-p/100);let s=`<svg viewBox="0 0 ${W} ${h}" style="width:100%;height:${h+10}px">`,acc=0,pts=[];
  [0,.5,1].forEach(f=>s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${Y(mx*f)}" y2="${Y(mx*f)}" stroke="currentColor" opacity=".08"/><text x="${P.l-6}" y="${Y(mx*f)+4}" font-size="10" fill="var(--muted)" text-anchor="end">${Math.round(mx*f)}</text>`);
  s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${Yp(80)}" y2="${Yp(80)}" stroke="var(--warn)" stroke-dasharray="4 4"/><text x="${W-P.r+4}" y="${Yp(80)+4}" font-size="10" fill="var(--warn)">80%</text>`;
@@ -2314,7 +2332,7 @@ const _ri=RENDER.insights;RENDER.insights=function(){_ri();const panel=$('#city'
  const codes=[...new Set(REC.map(r=>r.code))].filter(c=>ERR[c]);const mk2=MKT.filter(m=>REC.some(r=>r.bu===m));
  const cnt=(m,c)=>REC.filter(r=>r.bu===m&&r.code===c).length;
  panel.innerHTML=`<h4>🗺 Market × cause matrix <small>where the failures sit · click a cell for the records</small></h4>${heatMatrix(mk2,codes.map(c=>({h:ERR[c].t.split(' ').slice(0,2).join(' '),t:ERR[c].t,c})),(m,c)=>cnt(m,c.c),{onCell:(m,c)=>`x_recFilter('code','${c.c}')`})}
- <div class="fix" style="margin-top:12px">🧠 <b>SG 5010 × Voucher definition expired</b> is the hottest cell. One fix there removes ${cnt('SG 5010','E_VDEF_EXPIRED')} records (${Math.round(cnt('SG 5010','E_VDEF_EXPIRED')/REC.length*100)}% of everything open).</div>`;
+ <div class="fix" style="margin-top:12px">🧠 <b>SG 5010 × Voucher definition expired</b> is the hottest cell. One fix there removes ${cnt('SG 5010','E_VDEF_EXPIRED')} records (${Math.round(cnt('SG 5010','E_VDEF_EXPIRED')/(REC.length||1)*100)}% of everything open).</div>`;
  const sec=document.createElement('section');sec.className='x-grid2';const items=INC.map(i=>[ERR[i.code].t,i.recs,ERR[i.code].c]);
  const tot=items.reduce((a,x)=>a+x[1],0);let acc=0,k80=0;items.forEach((x,i)=>{acc+=x[1];if(!k80&&acc/tot>=.8)k80=i+1});
  sec.innerHTML=`<div class="panel solid"><h4>📊 Pareto of root causes <small>bars = records · line = cumulative %</small></h4>${pareto(items)}<div class="fix"><b>${k80} of ${items.length} causes</b> make up 80% of all failed records. Fix those first.</div></div>
@@ -2390,7 +2408,7 @@ function mdDraw(){LS.set('tasks',TASKS);const dn=TASKS.filter(t=>t[2]).length;$(
  $('#mdR').innerHTML=`<svg width="120" height="120"><circle cx="60" cy="60" r="50" stroke="rgba(127,127,127,.18)" stroke-width="12" fill="none"/><circle cx="60" cy="60" r="50" stroke="var(--ok)" stroke-width="12" fill="none" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="${314*(1-p)}" style="transition:stroke-dashoffset .6s"/></svg><b>${Math.round(p*100)}%</b>`;
  const order={h:0,m:1,l:2};$('#mdL').innerHTML=TASKS.map((t,i)=>[t,i]).sort((a,b)=>a[0][2]-b[0][2]||order[a[0][1]]-order[b[0][1]]).map(([t,i])=>`<div class="task ${t[2]?'done':''}"><span class="cb" style="${t[2]?'background:var(--ok);border-color:var(--ok)':''};cursor:pointer" onclick="x_mdT(${i},event)">${t[2]?'<svg viewBox="0 0 24 24" width="13" fill="none" stroke="#fff" stroke-width="3.2"><path d="M5 12l5 5 9-10"/></svg>':''}</span><span class="t" style="font-size:13px">${esc(t[0])}</span><span class="prio ${t[1]}">${{h:'HIGH',m:'MED',l:'LOW'}[t[1]]}</span><button class="del" title="Delete" onclick="x_mdD(${i})">✕</button></div>`).join('');
  $('#mdS').innerHTML=SUG.map((s,i)=>`<div class="task"><span class="prio ${s[1]}">${s[1]==='h'?'HIGH':'MED'}</span><span class="t" style="font-size:12.5px">${esc(s[0])}</span><span></span><button class="btn ghost sm" onclick="x_mdA(${i})">＋ Add</button></div>`).join('');
- const nx=UP.slice().sort((a,b)=>nextAt(a.t)-nextAt(b.t))[0];$('#mdNext').innerHTML=`${fmtLeft(nextAt(nx.t)-Date.now())}<small>until ${esc(nx.j.n)}</small>`;$('#mdNext').dataset.at=nextAt(nx.t).getTime()}
+ const nx=UP.slice().sort((a,b)=>nextAt(a.t)-nextAt(b.t))[0];if(!nx){$('#mdNext').innerHTML='<small>No journeys scheduled</small>';delete $('#mdNext').dataset.at;return}$('#mdNext').innerHTML=`${fmtLeft(nextAt(nx.t)-Date.now())}<small>until ${esc(nx.j.n)}</small>`;$('#mdNext').dataset.at=nextAt(nx.t).getTime()}
 window.x_mdT=(i,e)=>{TASKS[i][2]=TASKS[i][2]?0:1;if(TASKS[i][2]&&e)sparkle(e.clientX,e.clientY,'✓');mdDraw();if(TASKS.every(t=>t[2]))confetti(innerWidth/2,innerHeight/3,120)};
 window.x_mdD=i=>{TASKS.splice(i,1);mdDraw()};window.x_mdA=i=>{TASKS.push([SUG[i][0],SUG[i][1],0]);mdDraw();toast('＋','Task added',SUG[i][0],'ok')};
 RENDER.myday=function(){const add=()=>{const v=$('#mdIn').value.trim();if(!v)return;TASKS.push([v,$('#mdP').value,0]);$('#mdIn').value='';mdDraw()};$('#mdAdd').onclick=add;$('#mdIn').onkeydown=e=>{if(e.key==='Enter')add()};mdDraw()};
@@ -2513,11 +2531,29 @@ const PAINT={
  uranus:(u,v,lat)=>{const n=fbm(u*3,v*6,3,3);return mix(hex('#9fe3ea'),hex('#6cc6d6'),Math.sin(lat*6+n)*.5+.5)},
  neptune:(u,v,lat)=>{const n=fbm(u*4,v*7,4,4);let c=ramp([[0,'#1d3a9e'],[.5,'#3c63d6'],[1,'#7fa2ff']],Math.sin(lat*9+n*2.5)*.5+.5);const ex=Math.min(Math.abs(u-.6),1-Math.abs(u-.6))*7,ey=(lat-.25)*10;if(ex*ex+ey*ey<1)c=mix(c,hex('#0e1d5c'),.7);return c},
  sun:(u,v,lat)=>{const n=fbm(u*14,v*7,14,5),g=fbm(u*40,v*20,40,2);return ramp([[0,'#c2410c'],[.4,'#f97316'],[.6,'#fbbf24'],[.85,'#fde68a'],[1,'#fffbeb']],n*.8+g*.35)}};
-const TEX={};
-function tex(kind){if(TEX[kind])return TEX[kind];const W=kind==='sun'?256:192,H=W/2;const c=document.createElement('canvas');c.width=W*2;c.height=H;const g=c.getContext('2d');const im=g.createImageData(W,H),f=PAINT[kind];
+const TEX={};const TV='v5.2';const BLANK='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+try{const c=JSON.parse(localStorage.getItem('samat_tex')||'{}');if(c.v===TV)Object.assign(TEX,c.t)}catch(e){}
+const QUEUE=[];let qBusy=false;
+function saveTex(){try{const t={};['earth','cloud','mars','jupiter','saturn','venus','mercury','uranus','neptune','sun','ring','stars'].forEach(k=>{if(TEX[k])t[k]=TEX[k]});localStorage.setItem('samat_tex',JSON.stringify({v:TV,t}))}catch(e){}}
+function pump(){if(qBusy||!QUEUE.length)return;qBusy=true;(window.requestIdleCallback||(f=>setTimeout(()=>f({timeRemaining:()=>16}),30)))(()=>{const k=QUEUE.shift();
+ const url=k==='ring'?ringTex(true):k==='stars'?stars(true):texNow(k);document.querySelectorAll(`img[data-tex="${k}"]`).forEach(i=>{i.src=url;i.classList.add('ready')});
+ document.querySelectorAll(`[data-texbg="${k}"]`).forEach(e=>e.style.backgroundImage=`url(${url})`);qBusy=false;if(QUEUE.length)pump();else saveTex()},{timeout:600})}
+const lazy=k=>{if(TEX[k])return TEX[k];if(!QUEUE.includes(k)){QUEUE.push(k);pump()}return BLANK};
+function tex(kind){return lazy(kind)}
+function texNow(kind){if(TEX[kind])return TEX[kind];const W=kind==='sun'?256:192,H=W/2;const c=document.createElement('canvas');c.width=W*2;c.height=H;const g=c.getContext('2d');const im=g.createImageData(W,H),f=PAINT[kind];
  for(let y=0;y<H;y++){const lat=(y/H)*2-1;for(let x=0;x<W;x++){const r=f(x/W,y/H,lat),i=(y*W+x)*4;im.data[i]=r[0];im.data[i+1]=r[1];im.data[i+2]=r[2];im.data[i+3]=r[3]==null?255:r[3]}}
  g.putImageData(im,0,0);g.putImageData(im,W,0);return TEX[kind]=c.toDataURL()}
-function stars(){if(TEX.stars)return TEX.stars;const c=document.createElement('canvas');c.width=680;c.height=400;const g=c.getContext('2d');let s=7;const r=()=>(s=(s*16807)%2147483647)/2147483647;
+function ringTex(now){if(TEX.ring)return TEX.ring;if(!now)return lazy('ring');const N=256,c=document.createElement('canvas');c.width=c.height=N;const g=c.getContext('2d'),im=g.createImageData(N,N),C=N/2;
+ /* radial profile, t = r / outer radius; planet edge sits at t=.40 */
+ const band=t=>{if(t<.50||t>.985)return null;let a,col;
+  if(t<.60){a=.10+(t-.5)*1.6;col=[150,135,112]}                  /* C ring – faint, dusty */
+  else if(t<.795){a=.78+Math.sin(t*180)*.08;col=[226,206,168]}     /* B ring – brightest */
+  else if(t<.83){a=.06;col=[90,80,66]}                             /* Cassini Division */
+  else if(t<.985){a=(t>.94&&t<.95)?.12:.55+Math.sin(t*240)*.07;col=[206,188,152]} /* A ring + Encke gap */
+  const grain=(h2((t*900)|0,7)-.5)*.14;return [col[0],col[1],col[2],Math.max(0,Math.min(1,a+grain))]};
+ for(let y=0;y<N;y++)for(let x=0;x<N;x++){const r=Math.hypot(x-C+.5,y-C+.5)/C,b=band(r),i=(y*N+x)*4;if(b){im.data[i]=b[0];im.data[i+1]=b[1];im.data[i+2]=b[2];im.data[i+3]=b[3]*255}}
+ g.putImageData(im,0,0);return TEX.ring=c.toDataURL()}
+function stars(now){if(TEX.stars)return TEX.stars;if(!now)return lazy('stars');const c=document.createElement('canvas');c.width=680;c.height=400;const g=c.getContext('2d');let s=7;const r=()=>(s=(s*16807)%2147483647)/2147483647;
  const neb=g.createRadialGradient(470,120,10,470,120,260);neb.addColorStop(0,'rgba(120,90,200,.18)');neb.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=neb;g.fillRect(0,0,680,400);
  const neb2=g.createRadialGradient(120,300,10,120,300,220);neb2.addColorStop(0,'rgba(40,120,200,.14)');neb2.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=neb2;g.fillRect(0,0,680,400);
  for(let i=0;i<260;i++){const x=r()*680,y=r()*400,m=r();g.fillStyle=`rgba(255,${235+r()*20|0},${220+r()*35|0},${.25+m*.6})`;g.beginPath();g.arc(x,y,m>.97?1.4:m>.85?.9:.55,0,7);g.fill()}return TEX.stars=c.toDataURL()}
@@ -2526,7 +2562,7 @@ function stars(){if(TEX.stars)return TEX.stars;const c=document.createElement('c
 const MP={'TUMI':['mercury','Mercury',7,30],'JP 5630':['venus','Venus',11,44],'SG 5010':['earth','Earth',12,40],'TW 5060':['mars','Mars',9,34],'TH 5640':['jupiter','Jupiter',24,70],'MY 5050':['saturn','Saturn',19,60],'KR 5040':['uranus','Uranus',14,50],'HK 5090':['neptune','Neptune',14,48]};
 X.MP=MP;
 function planet(kind,size,{lit='orbit',spin}={}){const s=spin||(kind==='jupiter'||kind==='saturn'?18:kind==='venus'?60:30);
- return `<span class="pz ${kind} lit-${lit}" style="--s:${size}px;--spin:${s}s">${kind==='saturn'?'<span class="pz-ring back"></span>':''}<span class="pz-clip"><img class="pz-tex" alt="" src="${tex(kind)}">${kind==='earth'?`<img class="pz-cloud" alt="" src="${tex('cloud')}">`:''}<span class="pz-shade"></span></span><span class="pz-atmo"></span>${kind==='saturn'?'<span class="pz-ring front"></span>':''}</span>`}
+ return `<span class="pz ${kind} lit-${lit}" style="--s:${size}px;--spin:${s}s">${kind==='saturn'?`<span class="pz-ring pz-rb" data-texbg="ring" style="background-image:url(${ringTex()})"></span>`:''}<span class="pz-clip"><img class="pz-tex" alt="" data-tex="${kind}" src="${tex(kind)}">${kind==='earth'?`<img class="pz-cloud" alt="" data-tex="cloud" src="${tex('cloud')}">`:''}<span class="pz-shade"></span>${kind==='saturn'?'<span class="pz-rshadow"></span>':''}</span><span class="pz-atmo"></span>${kind==='saturn'?`<span class="pz-ring pz-rf" data-texbg="ring" style="background-image:url(${ringTex()})"></span>`:''}</span>`}
 X.planet=planet;
 
 /* ---------------- 3. realistic orrery on home ---------------- */
@@ -2535,12 +2571,12 @@ const RAD=[44,60,77,93,114,136,152,166];
 const stOf=k=>{const b=BUS.find(x=>x.k===k)||{};const js=J.filter(j=>j.bu===k);const bad=b.st==='bad'||js.some(j=>j.st==='bad');const warn=!bad&&(b.i>0||js.some(j=>j.st==='warn'||j.st==='none'));
  return {s:bad?'bad':warn?'warn':'ok',open:REC.filter(r=>r.bu===k&&r.st==='Open').length,js:js.length,fail:js.filter(j=>j.st==='bad').length,name:b.m||k}};
 const lab=s=>s==='bad'?'Needs action':s==='warn'?'Watch':'Clean';
-function buildSystem(){const old=$('.orr');if(old)old.remove();const hero=$('.hero');const sys=document.createElement('div');sys.className='sys enter';sys.style.setProperty('--stars',`url(${stars()})`);
+function buildSystem(){const old=$('.orr');if(old)old.remove();const hero=$('.hero');const sys=document.createElement('div');sys.className='sys enter';sys.style.setProperty('--stars',`url(${stars()})`);sys.dataset.texbg='stars';
  const score=82;const cnt=s=>ORD.filter(k=>stOf(k).s===s).length;
  sys.innerHTML=`<div class="sys-sky"></div><div class="sys-stage"><div class="sys-plane">
   ${ORD.map((k,i)=>{const [kind,pn,sz]=MP[k],st=stOf(k),r=RAD[i],T=(14*Math.pow(r/44,1.5)).toFixed(1),ph=(-(i*0.618%1)*T).toFixed(2);
    return `<div class="sys-orbit" style="--r:${r}px;--T:${T}s;--ph:${ph}s"><div class="sys-arm"><button class="sys-p" data-k="${k}" aria-label="${k} (${pn}): ${lab(st.s)}, ${st.open} open records"><span class="sys-face">${planet(kind,Math.round(sz*1.35))}<span class="sys-tag"><i class="${st.s}"></i>${k.split(' ')[0]}</span></span></button></div></div>`}).join('')}
-  <div class="sys-sun"><span class="sun-glow"></span><span class="sun-corona"></span><span class="sun-disc"><img alt="" src="${tex('sun')}"><span class="sun-limb"></span></span></div>
+  <div class="sys-sun"><span class="sun-glow"></span><span class="sun-corona"></span><span class="sun-disc"><img alt="" data-tex="sun" src="${tex('sun')}"><span class="sun-limb"></span></span></div>
  </div></div>
  <div class="sys-cap"><b class="num">${score}</b><span>health</span><span class="sys-sep"></span><span><i class="ok"></i>${cnt('ok')} clean</span><span><i class="warn"></i>${cnt('warn')} watch</span><span><i class="bad"></i>${cnt('bad')} action</span></div>
  <div class="sys-card" aria-hidden="true"></div>`;
@@ -2620,6 +2656,17 @@ const menu=$('#menu');menu.insertAdjacentHTML('beforeend',`<h5>Density</h5><div 
 const setDen=v=>{document.body.dataset.density=v;$$('#denSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));LS.set('density',v)};$$('#denSeg button').forEach(b=>b.onclick=()=>setDen(b.dataset.v));setDen(LS.get('density','comfy'));
 PITEMS.push({n:'Help center',s:'faq glossary',f:()=>x_show('help')},{n:'Take the tour',s:'help onboarding',f:()=>x_tour()},{n:'Keyboard shortcuts',s:'help keys',f:()=>x_keys()});
 const _rp=window.renderP;window.renderP=function(){_rp();if(!$('#pin').value.trim()&&RECENT.length){const ul=$('#plist');ul.insertAdjacentHTML('afterbegin','<li style="pointer-events:none;color:var(--muted);font-size:11px">RECENTLY VIEWED</li>'+RECENT.slice(0,4).map((r,i)=>`<li data-rv="${i}"><span>${esc(r.t)}</span><small>recent</small></li>`).join(''));ul.querySelectorAll('li[data-rv]').forEach(li=>li.onclick=()=>{closeAll();new Function(RECENT[+li.dataset.rv].f)()})}};
+/* data-source badge: always say whether this is demo or live (read-only) data */
+{const L=window.SAMAT_LIVE;const b=document.createElement('span');b.className='pill src '+(L?'live':'demo');
+ b.innerHTML=L?`<span class="live"></span>Live · read-only${L.generatedAt?' · '+esc(L.generatedAt):''}`:'Demo data';
+ b.title=L?'Data exported from Prod with SELECT-only queries. Nothing is written back.':'Sample data for preview. Connect the local bot to see real Prod data.';
+ const tb=$('.topbar');tb.insertBefore(b,$('.pill.upd')||$('#agentPill'));}
+/* safety net: never show NaN / Infinity / undefined when live data is empty or partial */
+const BAD=/(-?Infinity|NaN|undefined)(%|s|m)?/g;let sTimer=0;
+function sanitize(){sTimer=0;const w=document.createTreeWalker(document.querySelector('.app')||document.body,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode()){if(BAD.test(n.nodeValue)){BAD.lastIndex=0;n.nodeValue=n.nodeValue.replace(BAD,'—')}BAD.lastIndex=0}
+ const dr=document.getElementById('drawer');if(dr){const w2=document.createTreeWalker(dr,NodeFilter.SHOW_TEXT);while(n=w2.nextNode()){if(BAD.test(n.nodeValue))n.nodeValue=n.nodeValue.replace(BAD,'—');BAD.lastIndex=0}}}
+const later=()=>{if(!sTimer)sTimer=setTimeout(sanitize,150)};
+['x_show','openDrawer','x_openJ','x_openInc','x_openRec','x_pf','x_report','x_calDay'].forEach(fn=>{const o=window[fn];if(o)window[fn]=function(){const r=o.apply(this,arguments);later();return r}});sanitize();
 const h=location.hash.slice(1);if(h==='help')setTimeout(()=>x_show('help'),80);
 setTimeout(()=>{const v=$('#viewHelp');if(v)X.charts&&0},0);
 })();

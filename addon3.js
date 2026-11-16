@@ -15,7 +15,8 @@ const _rn=window.renderN;window.renderN=function(){_rn();const list=NOTIFS.filte
 document.documentElement.style.setProperty('--tick-dur','200s');
 
 /* ---------- charts (SVG, no libs) ---------- */
-function barChart(data,{h=220,stack=[['p','#64D2FF','Processed'],['c','#FF453A','Cancelled']],labels,avg=true}={}){
+function barChart(data,o){if(!data||!data.length)return '<div class="empty"><div class="ic">🦉</div>No data yet</div>';return barChart_(data,o)}
+function barChart_(data,{h=220,stack=[['p','#64D2FF','Processed'],['c','#FF453A','Cancelled']],labels,avg=true}={}){
  const W=960,P={l:40,r:12,t:14,b:26},n=data.length,mx=Math.max(1,...data.map(d=>stack.reduce((a,[k])=>a+d[k],0)));const top=Math.ceil(mx/5)*5||5;
  const bw=(W-P.l-P.r)/n,Y=v=>P.t+(h-P.t-P.b)*(1-v/top);let s=`<svg viewBox="0 0 ${W} ${h}" style="width:100%;height:${h}px" class="chart">`;
  for(let i=0;i<=4;i++){const v=top*i/4,y=Y(v);s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${y}" y2="${y}" stroke="currentColor" opacity=".08"/><text x="${P.l-8}" y="${y+4}" font-size="10" fill="var(--muted)" text-anchor="end">${Math.round(v)}</text>`}
@@ -23,12 +24,13 @@ function barChart(data,{h=220,stack=[['p','#64D2FF','Processed'],['c','#FF453A',
   if(labels&&(i%5===0||i===n-1))s+=`<text x="${P.l+i*bw+bw/2}" y="${h-8}" font-size="10" fill="var(--muted)" text-anchor="middle">${labels[i]}</text>`});
  if(avg){const a=data.reduce((x,d)=>x+stack.reduce((q,[k])=>q+d[k],0),0)/n;s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${Y(a)}" y2="${Y(a)}" stroke="var(--warn)" stroke-dasharray="5 5" opacity=".8"/><text x="${W-P.r}" y="${Y(a)-5}" font-size="10" fill="var(--warn)" text-anchor="end">avg ${a.toFixed(1)}/day</text>`}
  return s+'</svg>'+`<div class="legend-row">${stack.map(([k,c,l])=>`<span><i style="background:${c}"></i>${l}</span>`).join('')}${avg?'<span><i style="background:var(--warn)"></i>30-day average</span>':''}</div>`}
-function lineChart(vals,{h=150,col='#FF453A',labels,unit=''}={}){const W=460,P={l:34,r:14,t:16,b:24},mx=Math.max(3,Math.ceil(Math.max(...vals)*1.15)),X2=i=>P.l+i*(W-P.l-P.r)/(vals.length-1),Y=v=>P.t+(h-P.t-P.b)*(1-v/mx);
+function lineChart(vals,o){if(!vals||vals.length<2)return '<div class="empty"><div class="ic">🦉</div>Not enough data yet</div>';return lineChart_(vals,o)}
+function lineChart_(vals,{h=150,col='#FF453A',labels,unit=''}={}){const W=460,P={l:34,r:14,t:16,b:24},mx=Math.max(3,Math.ceil(Math.max(...vals)*1.15)),X2=i=>P.l+i*(W-P.l-P.r)/(vals.length-1),Y=v=>P.t+(h-P.t-P.b)*(1-v/mx);
  const d=vals.map((v,i)=>(i?'L':'M')+X2(i).toFixed(1)+' '+Y(v).toFixed(1)).join(' ');let s=`<svg viewBox="0 0 ${W} ${h}" style="width:100%;height:${h}px">`;
  for(let i=0;i<=3;i++){const v=mx*i/3;s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="currentColor" opacity=".08"/><text x="${P.l-6}" y="${Y(v)+4}" font-size="10" fill="var(--muted)" text-anchor="end">${Math.round(v)}</text>`}
  s+=`<path d="${d} L${X2(vals.length-1)} ${Y(0)} L${X2(0)} ${Y(0)}Z" fill="${col}" opacity=".12"/><path d="${d}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round" style="stroke-dasharray:1500;stroke-dashoffset:1500;animation:draw 1.3s forwards"/>`;
  vals.forEach((v,i)=>{s+=`<circle cx="${X2(i)}" cy="${Y(v)}" r="3.5" fill="${col}"><title>${labels?labels[i]+': ':''}${v}${unit}</title></circle>`;if(labels)s+=`<text x="${X2(i)}" y="${h-6}" font-size="10" fill="var(--muted)" text-anchor="middle">${labels[i]}</text>`});return s+'</svg>'}
-function pareto(items){/* items: [label,value,color] sorted desc */const W=560,h=240,P={l:36,r:40,t:16,b:70},n=items.length,tot=items.reduce((a,x)=>a+x[1],0),mx=items[0][1];
+function pareto(items){if(!items.length)return '<div class="empty"><div class="ic">🦉</div>No failures to rank</div>';/* items: [label,value,color] sorted desc */const W=560,h=240,P={l:36,r:40,t:16,b:70},n=items.length,tot=items.reduce((a,x)=>a+x[1],0),mx=items[0][1];
  const bw=(W-P.l-P.r)/n,Y=v=>P.t+(h-P.t-P.b)*(1-v/mx),Yp=p=>P.t+(h-P.t-P.b)*(1-p/100);let s=`<svg viewBox="0 0 ${W} ${h}" style="width:100%;height:${h+10}px">`,acc=0,pts=[];
  [0,.5,1].forEach(f=>s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${Y(mx*f)}" y2="${Y(mx*f)}" stroke="currentColor" opacity=".08"/><text x="${P.l-6}" y="${Y(mx*f)+4}" font-size="10" fill="var(--muted)" text-anchor="end">${Math.round(mx*f)}</text>`);
  s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${Yp(80)}" y2="${Yp(80)}" stroke="var(--warn)" stroke-dasharray="4 4"/><text x="${W-P.r+4}" y="${Yp(80)+4}" font-size="10" fill="var(--warn)">80%</text>`;
@@ -94,7 +96,7 @@ const _ri=RENDER.insights;RENDER.insights=function(){_ri();const panel=$('#city'
  const codes=[...new Set(REC.map(r=>r.code))].filter(c=>ERR[c]);const mk2=MKT.filter(m=>REC.some(r=>r.bu===m));
  const cnt=(m,c)=>REC.filter(r=>r.bu===m&&r.code===c).length;
  panel.innerHTML=`<h4>🗺 Market × cause matrix <small>where the failures sit · click a cell for the records</small></h4>${heatMatrix(mk2,codes.map(c=>({h:ERR[c].t.split(' ').slice(0,2).join(' '),t:ERR[c].t,c})),(m,c)=>cnt(m,c.c),{onCell:(m,c)=>`x_recFilter('code','${c.c}')`})}
- <div class="fix" style="margin-top:12px">🧠 <b>SG 5010 × Voucher definition expired</b> is the hottest cell. One fix there removes ${cnt('SG 5010','E_VDEF_EXPIRED')} records (${Math.round(cnt('SG 5010','E_VDEF_EXPIRED')/REC.length*100)}% of everything open).</div>`;
+ <div class="fix" style="margin-top:12px">🧠 <b>SG 5010 × Voucher definition expired</b> is the hottest cell. One fix there removes ${cnt('SG 5010','E_VDEF_EXPIRED')} records (${Math.round(cnt('SG 5010','E_VDEF_EXPIRED')/(REC.length||1)*100)}% of everything open).</div>`;
  const sec=document.createElement('section');sec.className='x-grid2';const items=INC.map(i=>[ERR[i.code].t,i.recs,ERR[i.code].c]);
  const tot=items.reduce((a,x)=>a+x[1],0);let acc=0,k80=0;items.forEach((x,i)=>{acc+=x[1];if(!k80&&acc/tot>=.8)k80=i+1});
  sec.innerHTML=`<div class="panel solid"><h4>📊 Pareto of root causes <small>bars = records · line = cumulative %</small></h4>${pareto(items)}<div class="fix"><b>${k80} of ${items.length} causes</b> make up 80% of all failed records. Fix those first.</div></div>
@@ -170,7 +172,7 @@ function mdDraw(){LS.set('tasks',TASKS);const dn=TASKS.filter(t=>t[2]).length;$(
  $('#mdR').innerHTML=`<svg width="120" height="120"><circle cx="60" cy="60" r="50" stroke="rgba(127,127,127,.18)" stroke-width="12" fill="none"/><circle cx="60" cy="60" r="50" stroke="var(--ok)" stroke-width="12" fill="none" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="${314*(1-p)}" style="transition:stroke-dashoffset .6s"/></svg><b>${Math.round(p*100)}%</b>`;
  const order={h:0,m:1,l:2};$('#mdL').innerHTML=TASKS.map((t,i)=>[t,i]).sort((a,b)=>a[0][2]-b[0][2]||order[a[0][1]]-order[b[0][1]]).map(([t,i])=>`<div class="task ${t[2]?'done':''}"><span class="cb" style="${t[2]?'background:var(--ok);border-color:var(--ok)':''};cursor:pointer" onclick="x_mdT(${i},event)">${t[2]?'<svg viewBox="0 0 24 24" width="13" fill="none" stroke="#fff" stroke-width="3.2"><path d="M5 12l5 5 9-10"/></svg>':''}</span><span class="t" style="font-size:13px">${esc(t[0])}</span><span class="prio ${t[1]}">${{h:'HIGH',m:'MED',l:'LOW'}[t[1]]}</span><button class="del" title="Delete" onclick="x_mdD(${i})">✕</button></div>`).join('');
  $('#mdS').innerHTML=SUG.map((s,i)=>`<div class="task"><span class="prio ${s[1]}">${s[1]==='h'?'HIGH':'MED'}</span><span class="t" style="font-size:12.5px">${esc(s[0])}</span><span></span><button class="btn ghost sm" onclick="x_mdA(${i})">＋ Add</button></div>`).join('');
- const nx=UP.slice().sort((a,b)=>nextAt(a.t)-nextAt(b.t))[0];$('#mdNext').innerHTML=`${fmtLeft(nextAt(nx.t)-Date.now())}<small>until ${esc(nx.j.n)}</small>`;$('#mdNext').dataset.at=nextAt(nx.t).getTime()}
+ const nx=UP.slice().sort((a,b)=>nextAt(a.t)-nextAt(b.t))[0];if(!nx){$('#mdNext').innerHTML='<small>No journeys scheduled</small>';delete $('#mdNext').dataset.at;return}$('#mdNext').innerHTML=`${fmtLeft(nextAt(nx.t)-Date.now())}<small>until ${esc(nx.j.n)}</small>`;$('#mdNext').dataset.at=nextAt(nx.t).getTime()}
 window.x_mdT=(i,e)=>{TASKS[i][2]=TASKS[i][2]?0:1;if(TASKS[i][2]&&e)sparkle(e.clientX,e.clientY,'✓');mdDraw();if(TASKS.every(t=>t[2]))confetti(innerWidth/2,innerHeight/3,120)};
 window.x_mdD=i=>{TASKS.splice(i,1);mdDraw()};window.x_mdA=i=>{TASKS.push([SUG[i][0],SUG[i][1],0]);mdDraw();toast('＋','Task added',SUG[i][0],'ok')};
 RENDER.myday=function(){const add=()=>{const v=$('#mdIn').value.trim();if(!v)return;TASKS.push([v,$('#mdP').value,0]);$('#mdIn').value='';mdDraw()};$('#mdAdd').onclick=add;$('#mdIn').onkeydown=e=>{if(e.key==='Enter')add()};mdDraw()};

@@ -1,0 +1,5 @@
+window.SAMAT_LIVE={
+ bus:[{k:'SG 5010',m:'SAM Singapore',st:'bad',n:2,kn:0,i:0,c:0,f:3,t:'07:10',tr:[0,1,0,2,1,0,2]},{k:'HK 5090',m:'SAM Hong Kong',st:'ok',n:0,kn:0,i:0,c:0,f:2,t:'07:12',tr:[0,0,0,0,0,0,0]}],
+ journeys:[{id:'L1',n:'SG Welcome series',bu:'SG 5010',p:'SAM',k:'welcome',st:'bad',in:500,fs:2,err:{E_VDEF_EXPIRED:3},streak:2,own:'SG CRM'},{id:'L2',n:'HK Birthday',bu:'HK 5090',p:'SAM',k:'birthday',st:'ok',in:120,fs:-1,err:{},streak:0,own:'HK CRM'}],
+ records:[{id:'SSSG20250000001',name:'A Tan',bu:'SG 5010',j:'L1',jn:'SG Welcome series',step:'Welcome pts',code:'E_VDEF_EXPIRED',ts:'16 Nov 07:01',tsn:421,st:'Open',sev:'bad'},{id:'SSSG20250000002',name:'B Lim',bu:'SG 5010',j:'L1',jn:'SG Welcome series',step:'Welcome pts',code:'E_VDEF_EXPIRED',ts:'16 Nov 07:02',tsn:422,st:'Open',sev:'bad'},{id:'SSSG20250000003',name:'C Ng',bu:'SG 5010',j:'CHK',jn:'Daily check · No-contact',step:'Daily check',code:'E_NO_CONTACT',ts:'16 Nov 07:05',tsn:425,st:'Open',sev:'bad',src:'Daily check'}],
+ schedule:[['L1','19:30'],['L2','09:00']],history:{}};

@@ -2,6 +2,7 @@
    Journeys monitor · Root-cause center · Record explorer · Data ops · live alerts · record-level drawers · animals
    All data is deterministic demo data (seeded) shaped like the real bot outputs. */
 (function(){
+const LIVE=window.SAMAT_LIVE||null;
 const $$=s=>[...document.querySelectorAll(s)];
 let seed=20261116;const rnd=()=>{seed=(seed*1664525+1013904223)%4294967296;return seed/4294967296};
 const pick=a=>a[Math.floor(rnd()*a.length)];
@@ -61,7 +62,7 @@ const ERRK=Object.keys(ERR);
 /* ---------------- journeys ---------------- */
 const STEPS={birthday:['Entry','Eligibility','Issue voucher','Email','Delivered','Opened'],welcome:['Entry','Create member','Welcome pts','Email','SMS','Delivered'],
  tier:['Entry','Tier check','Decision split','Benefit','Email','Delivered'],expiry:['Entry','Points calc','Reminder email','Push','Delivered'],reactivate:['Entry','Wait 2d','Offer voucher','Email','Delivered','Redeemed']};
-const J=[
+const J=(LIVE&&LIVE.journeys)||[
  {id:'J1',n:'TH Black Birthday voucher',bu:'TH 5640',p:'SAM',k:'birthday',st:'bad',in:1240,fs:3,err:{E_NO_CONTACT:41,E_CONSENT:6},streak:3,own:'TH CRM'},
  {id:'J2',n:'SG Welcome series',bu:'SG 5010',p:'SAM',k:'welcome',st:'bad',in:860,fs:2,err:{E_VDEF_EXPIRED:212},streak:2,own:'SG CRM'},
  {id:'J3',n:'MY Points expiry reminder',bu:'MY 5050',p:'AT',k:'expiry',st:'warn',in:3120,fs:2,err:{E_TIMEOUT:58,E_NO_CONTACT:9},streak:1,own:'MY CRM'},
@@ -77,7 +78,7 @@ const J=[
  {id:'J13',n:'TW Birthday voucher',bu:'TW 5060',p:'AT',k:'birthday',st:'ok',in:690,fs:-1,err:{},streak:0,own:'TW CRM'},
  {id:'J14',n:'HK Lapsed win-back',bu:'HK 5090',p:'SAM',k:'reactivate',st:'warn',in:1310,fs:3,err:{E_TIMEOUT:27},streak:1,own:'HK CRM'},
 ];
-J.forEach(j=>{const steps=STEPS[j.k];const fails=Object.values(j.err).reduce((a,b)=>a+b,0);j.fail=fails;let cur=j.in;
+J.forEach(j=>{j.err=j.err||{};const steps=STEPS[j.k]||j.steps||['Entry','Process','Send','Delivered'];if(j.fs==null)j.fs=-1;j.in=+j.in||0;const fails=Object.values(j.err).reduce((a,b)=>a+b,0);j.fail=fails;let cur=j.in;
  j.sc=steps.map((s,i)=>{if(i>0){const drop=i===j.fs?fails:Math.round(cur*(s==='Opened'?.55:s==='Redeemed'?.8:s==='Delivered'?.01:.02*rnd()));cur=Math.max(0,cur-drop)}return {s,c:cur}});
  j.sr=j.in?(1-fails/j.in)*100:0;j.tr=Array.from({length:14},(_,i)=>Math.max(0,Math.round((i>=14-Math.max(j.streak,1)&&j.fail?j.fail*(.7+rnd()*.5):j.fail*.05*rnd())+rnd()*3)));
  j.last=j.st==='none'?'—':`16 Nov ${String(5+Math.floor(rnd()*4)).padStart(2,'0')}:${String(Math.floor(rnd()*60)).padStart(2,'0')}`;
@@ -89,7 +90,8 @@ const FN=['Ananya','Wei','Somchai','Mei','Haruto','Ji-woo','Siti','Arjun','Lim',
 const LN=['Tan','Chen','Wong','Lee','Kim','Sato','Lim','Rahman','Park','Suzuki','Ng','Chua','Ong'];
 const BUP={'TH 5640':'TH','SG 5010':'SG','MY 5050':'MY','KR 5040':'KR','HK 5090':'HK','TW 5060':'TW','JP 5630':'JP','TUMI':'TU'};
 const REC=[];let rid=0;
-J.forEach(j=>Object.entries(j.err).forEach(([code,n])=>{for(let i=0;i<n;i++){rid++;const pre=(j.p==='AT'?'AT':j.p==='TUMI'?'TU':'SS')+BUP[j.bu];
+if(LIVE&&LIVE.records){LIVE.records.forEach(r=>REC.push(Object.assign({retry:0,st:'Open',src:'Journey',sev:'warn',tier:'',email:'',name:'',step:'',jn:'',j:'CHK',tsn:0,ts:''},r)))}
+else J.forEach(j=>Object.entries(j.err).forEach(([code,n])=>{for(let i=0;i<n;i++){rid++;const pre=(j.p==='AT'?'AT':j.p==='TUMI'?'TU':'SS')+BUP[j.bu];
  const h=5+Math.floor(rnd()*5),m=Math.floor(rnd()*60);const first=FN[Math.floor(rnd()*FN.length)],last=LN[Math.floor(rnd()*LN.length)];
  REC.push({id:pre+'2025'+String(1000000+Math.floor(rnd()*8999999)),name:first+' '+last,email:code==='E_NO_CONTACT'?'—':(first[0]+'***'+'@'+pick(['gmail.com','yahoo.com','hotmail.com'])).toLowerCase(),
  j:j.id,jn:j.n,bu:j.bu,step:j.sc[Math.max(1,j.fs)].s,code,tier:pick(TIERS),ts:`16 Nov ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`,tsn:h*60+m,
@@ -101,7 +103,7 @@ const CHKERR={ESCROW_STUCK:{t:'Escrow past release date',c:'#BF5AF2',rc:'Escrow 
  TIER_DOWNGRADE:{t:'Tier downgrade candidate',c:'#0A84FF',rc:'Qualifying spend fell under the Silver threshold after a return.',fix:['Confirm the return in the transaction journal','Verify after tonight\'s batch']},
  RETURN_GT_SALE:{t:'Return amount greater than sale',c:'#64D2FF',rc:'Offline return was keyed with the gross amount including tax twice.',fix:['Ask the store to correct the return','Reverse the extra points (change ticket)']},
  ESCROW_AT_EXPIRY:{t:'Escrow at tier expiry',c:'#BF5AF2',rc:'Tier ends while points are still in escrow; the member would drop a tier.',fix:['Release escrow before the tier end date']}};
-CHK.forEach(([chk,code,n,bu])=>{for(let i=0;i<n;i++){rid++;const b=bu==='All BUs'?pick(['TH 5640','SG 5010','MY 5050','HK 5090','KR 5040']):bu;const h=6+Math.floor(rnd()*3),m=Math.floor(rnd()*60);
+if(!(LIVE&&LIVE.records))CHK.forEach(([chk,code,n,bu])=>{for(let i=0;i<n;i++){rid++;const b=bu==='All BUs'?pick(['TH 5640','SG 5010','MY 5050','HK 5090','KR 5040']):bu;const h=6+Math.floor(rnd()*3),m=Math.floor(rnd()*60);
  REC.push({id:'SS'+BUP[b]+'2025'+String(1000000+Math.floor(rnd()*8999999)),name:pick(FN)+' '+pick(LN),email:code==='E_NO_CONTACT'?'—':'h***@gmail.com',j:'CHK',jn:'Daily check · '+chk,bu:b,step:'Daily check',code,tier:pick(TIERS),
  ts:`16 Nov ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`,tsn:h*60+m,retry:0,st:'Open',src:'Daily check',sev:'bad'})}});
 const errInfo=c=>ERR[c]||CHKERR[c]||{t:c,c:'#8E8E93',rc:'',fix:[]};
@@ -110,6 +112,7 @@ const errInfo=c=>ERR[c]||CHKERR[c]||{t:c,c:'#8E8E93',rc:'',fix:[]};
 const INC=ERRK.map(code=>{const recs=REC.filter(r=>r.code===code);const js=[...new Set(recs.map(r=>r.j))].filter(x=>x!=='CHK');const bus=[...new Set(recs.map(r=>r.bu))];
  return {code,recs:recs.length,js,bus,first:recs.length?recs.reduce((a,r)=>r.tsn<a.tsn?r:a).ts:'—',sev:code==='E_CONSENT'?'info':recs.length>100?'bad':recs.length>40?'bad':'warn',conf:{E_NO_CONTACT:94,E_VDEF_EXPIRED:98,E_MEMBER_INACTIVE:87,E_DPE_NO_JOURNAL:91,E_TIER_CHANGED:76,E_TIMEOUT:89,E_CONSENT:99}[code]}}).filter(i=>i.recs).sort((a,b)=>b.recs-a.recs);
 
+const INC0={code:'E_CONSENT',recs:0,js:[],bus:[],conf:0,sev:'info',first:'—'};
 /* ---------------- DOM: views ---------------- */
 const main=document.querySelector('main');const foot=document.querySelector('.footer-note');
 const mk=(id,html)=>{const v=document.createElement('div');v.className='view';v.id=id;v.hidden=true;v.innerHTML=html;main.insertBefore(v,foot);return v};
@@ -137,7 +140,7 @@ mk('viewRca',`
  <p>Failures are grouped by their underlying cause, not by journey. Fix one cause and it clears every journey and record it affects. Each incident has evidence, a 5-whys chain, a confidence score and a fix playbook.</p></div>
  <div style="display:flex;gap:8px"><button class="btn" onclick="x_copyRca()">⧉ Copy incident summary</button></div></section>
  <section class="x-kpis">${kpiH('Open incidents',INC.filter(i=>i.sev!=='info').length,'distinct root causes','bad')}${kpiH('Records impacted',INC.reduce((a,i)=>a+i.recs,0),'across journeys + checks')}
- ${kpiH('Journeys affected',new Set(INC.flatMap(i=>i.js)).size,'of '+J.length)}${kpiH('Top cause share',Math.round(INC[0].recs/INC.reduce((a,i)=>a+i.recs,0)*100)+'%',errInfo(INC[0].code).t,'warn')}${kpiH('Avg confidence',Math.round(INC.reduce((a,i)=>a+i.conf,0)/INC.length)+'%','evidence-based')}</section>
+ ${kpiH('Journeys affected',new Set(INC.flatMap(i=>i.js)).size,'of '+J.length)}${kpiH('Top cause share',Math.round((INC[0]||INC0).recs/INC.reduce((a,i)=>a+i.recs,0)*100)+'%',errInfo((INC[0]||INC0).code).t,'warn')}${kpiH('Avg confidence',Math.round(INC.reduce((a,i)=>a+i.conf,0)/(INC.length||1))+'%','evidence-based')}</section>
  <section class="x-grid3" id="incs"></section>
  <section class="panel solid"><h4>⏱ Event timeline · 16 Nov (UTC) <small>failures lined up against batches, deploys and upstream events</small></h4><div class="tl" id="tl"></div></section>
  <section class="x-grid2"><div class="panel solid"><h4>🌐 Blast radius <small>cause → journeys → BUs</small></h4><div id="blast"></div></div>
@@ -203,7 +206,7 @@ function renderJ(){
   <div class="legend" style="flex-direction:row;flex-wrap:wrap;gap:4px 12px">${ERRK.map(c=>`<div><i style="background:${ERR[c].c}"></i>${ERR[c].t}</div>`).join('')}</div>`;
  const rs={};REC.filter(r=>r.src==='Journey').forEach(r=>rs[r.code]=(rs[r.code]||0)+1);const rmx=Math.max(...Object.values(rs));
  $('#jreason').innerHTML=Object.entries(rs).sort((a,b)=>b[1]-a[1]).map(([c,v],i)=>`<div class="rbar" style="cursor:pointer;grid-template-columns:190px 1fr 46px" onclick="x_recFilter('code','${c}')"><span>${ERR[c].t}</span><span class="t"><i style="width:${v/rmx*100}%;background:${ERR[c].c};animation-delay:${i*60}ms"></i></span><b class="num">${v}</b></div>`).join('')
-  +`<div class="fix">💡 <b>${ERR[INC[0].code].t}</b> alone explains ${Math.round(INC[0].recs/REC.length*100)}% of all failed records. Fix it first — <a style="color:var(--info);cursor:pointer;font-weight:600" onclick="x_openInc('${INC[0].code}')">open playbook →</a></div>`;
+  +`<div class="fix">💡 <b>${ERR[(INC[0]||INC0).code].t}</b> alone explains ${Math.round((INC[0]||INC0).recs/(REC.length||1)*100)}% of all failed records. Fix it first — <a style="color:var(--info);cursor:pointer;font-weight:600" onclick="x_openInc('${(INC[0]||INC0).code}')">open playbook →</a></div>`;
  // heat
  const days=[...Array(14)].map((_,i)=>{const d=new Date(2026,10,3+i);return d.getDate()+'/'+(d.getMonth()+1)});
  const hcol=v=>v===0?'rgba(48,209,88,.25)':v<10?'rgba(255,214,10,.35)':v<50?'rgba(255,159,10,.55)':'rgba(255,69,58,.75)';
@@ -374,17 +377,17 @@ window.openDrawer=function(b){if(!b)return;$('#drawer').classList.remove('wide')
  d.appendChild(box);bindRecRows(box)};
 
 /* ---------------- live notifications: new failures arrive ---------------- */
-NOTIFS.unshift({id:101,s:'bad',cat:'campaigns',t:'Root cause found: Voucher definition expired – 308 records in 2 SG journeys',p:'98% confidence · owner Loyalty admin · open playbook',g:'Today',ago:'5 min ago',u:true,x:()=>x_openInc('E_VDEF_EXPIRED')},
+if(!LIVE)NOTIFS.unshift({id:101,s:'bad',cat:'campaigns',t:'Root cause found: Voucher definition expired – 308 records in 2 SG journeys',p:'98% confidence · owner Loyalty admin · open playbook',g:'Today',ago:'5 min ago',u:true,x:()=>x_openInc('E_VDEF_EXPIRED')},
  {id:102,s:'bad',cat:'campaigns',t:'KR Tier upgrade congrats failing 4 runs in a row',p:'Tier changed during journey + DPE journal missing',g:'Today',ago:'20 min ago',u:true,x:()=>x_openJ('J4')},
  {id:103,s:'warn',cat:'runs',t:'Journey not run: MY Black renewal reminder',p:'Entry DE was empty – upstream export did not run',g:'Today',ago:'40 min ago',u:true,x:()=>x_openJ('J10')});
 const _ofn=window.openFromN;window.openFromN=function(id){const n=NOTIFS.find(x=>x.id===id);if(n&&n.x){readN(id);togglePanel(false);n.x();return}_ofn(id)};
 updateBell(true);
-const LIVE=[['J3','E_TIMEOUT','MY Points expiry reminder: 12 new API timeouts'],['J1','E_NO_CONTACT','TH Black Birthday: 5 more members without email'],['J14','E_TIMEOUT','HK Lapsed win-back: timeout rate 2.4% (> 2% rule)'],['J6','E_MEMBER_INACTIVE','TW Reactivation: 3 merged members failed update']];
-let li=0;function liveTick(){if(document.hidden)return;const [jid,code,msg]=LIVE[li++%LIVE.length];const nid=200+li;
+const FEED=[['J3','E_TIMEOUT','MY Points expiry reminder: 12 new API timeouts'],['J1','E_NO_CONTACT','TH Black Birthday: 5 more members without email'],['J14','E_TIMEOUT','HK Lapsed win-back: timeout rate 2.4% (> 2% rule)'],['J6','E_MEMBER_INACTIVE','TW Reactivation: 3 merged members failed update']];
+let li=0;function liveTick(){if(document.hidden)return;const [jid,code,msg]=FEED[li++%FEED.length];const nid=200+li;
  NOTIFS.unshift({id:nid,s:'bad',cat:'campaigns',t:'New failure: '+msg,p:ERR[code].t+' · likely cause: '+ERR[code].rc.split('. ')[0],g:'Today',ago:'just now',u:true,x:()=>x_openJ(jid)});
  updateBell(true);const b=$('#bellBtn');b.classList.remove('ring-anim');void b.offsetWidth;b.classList.add('ring-anim');
  toast('⛔','New journey failure',msg,'bad',()=>x_openJ(jid))}
-setTimeout(()=>{liveTick();setInterval(liveTick,45000)},9000);
+if(!LIVE)setTimeout(()=>{liveTick();setInterval(liveTick,45000)},9000);
 
 /* ---------------- palette entries ---------------- */
 PITEMS.push({n:'Journeys & campaigns',s:'journey monitor',f:()=>x_show('journeys')},{n:'Root-cause center',s:'rca incidents',f:()=>x_show('rca')},{n:'Record explorer',s:'failed records',f:()=>x_show('records')},{n:'Data ops',s:'pipeline freshness quality',f:()=>x_show('ops')},

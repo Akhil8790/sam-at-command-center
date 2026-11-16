@@ -23,6 +23,7 @@ Object.keys(ERR).forEach(code=>{const js=J.filter(j=>j.err[code]);if(!js.length)
  const days=DAYS.slice(DAYS.length-n-1,DAYS.length-1);
  HIST[code]=days.map((d,i)=>{const j=js[(i+1)%js.length];const recs=Math.max(3,Math.round(j.err[code]*(.4+rnd()*.8)));const pre=REC.find(r=>r.j===j.id&&r.code===code);const p=pre?pre.id.slice(0,9):'SSSG2025';
   return {d,t:`${String(5+Math.floor(rnd()*4)).padStart(2,'0')}:${String(Math.floor(rnd()*60)).padStart(2,'0')}`,j:j.id,jn:j.n,bu:j.bu,recs,ids:[0,1,2].map(()=>p+String(1000000+Math.floor(rnd()*8999999)).slice(0,7)),fix:FIXED[code],mttr:`${1+Math.floor(rnd()*5)}h ${Math.floor(rnd()*60)}m`,held:1+Math.floor(rnd()*5)}})});
+if(window.SAMAT_LIVE&&window.SAMAT_LIVE.history){Object.keys(HIST).forEach(k=>delete HIST[k]);Object.assign(HIST,window.SAMAT_LIVE.history)}
 const rep=code=>HIST[code]||[];
 const jRep=j=>Object.keys(j.err).filter(c=>rep(c).length).map(c=>({c,h:rep(c),same:rep(c).filter(o=>o.j===j.id)}));
 function repBlock(code,curJ){const H=rep(code);if(!H.length)return'';const E=ERR[code];const last=H[H.length-1];const sameJ=curJ?H.filter(o=>o.j===curJ.id):[];
@@ -59,7 +60,7 @@ const PCHK=[
  {k:'status',n:'Members still active (not merged)',code:'E_MEMBER_INACTIVE'},{k:'dpe',n:'Upstream DPE / tier batch completed',code:'E_DPE_NO_JOURNAL'},{k:'api',n:'Marketing Cloud API healthy (p95 latency)',code:'E_TIMEOUT'},
  {k:'entry',n:'Entry data extension populated',code:null},{k:'freq',n:'No member gets > 3 messages in 24 h',code:null}];
 function nextAt(hhmm){const [h,m]=hhmm.split(':').map(Number);const n=new Date();const t=new Date(n);t.setHours(h,m,0,0);if(t<=n)t.setDate(t.getDate()+1);return t}
-const UP=SCHED.map(([id,t])=>{const j=J.find(x=>x.id===id);const aud=Math.round((j.in||900)*(.9+rnd()*.25));const checks=PCHK.map(c=>{let n=0,st='p',note='';
+const UP=((window.SAMAT_LIVE&&window.SAMAT_LIVE.schedule)||SCHED).filter(([id])=>J.some(x=>x.id===id)).map(([id,t])=>{const j=J.find(x=>x.id===id);const aud=Math.round((j.in||900)*(.9+rnd()*.25));const checks=PCHK.map(c=>{let n=0,st='p',note='';
  if(c.code&&j.err[c.code]){n=Math.round(j.err[c.code]*(aud/(j.in||aud))*(c.code==='E_TIMEOUT'?.4:1.05));st=c.code==='E_CONSENT'?'w':'f'}
  if(c.k==='vdef'&&j.err.E_VDEF_EXPIRED){n=Math.round(aud*.86);note='Definition expired 14 Nov – every voucher issue will fail'}
  if(c.k==='entry'&&j.notrun){st='f';note='Entry DE is empty – journey will send nothing';n=0}
@@ -149,7 +150,7 @@ ASK
 window.x_digest=()=>{copy(digestText());toast('⧉','Daily digest copied','Paste into Teams or email','ok')};
 RENDER.insights=function(){
  $('#inK').innerHTML=kpiH('Failure rate this week','3.9%','was 2.6% last week','bad')+kpiH('Repeat causes',Object.keys(HIST).length,'seen before','warn')+kpiH('Median time to fix','2h 05m','−18 min vs last week','ok')+kpiH('Fixes that held > 7 d','38%','permanent fixes needed','warn')+kpiH('SLA met',92,'% of runs on time');countAll($('#inK'));
- const M={};REC.forEach(r=>M[r.bu]=(M[r.bu]||0)+1);const ent=Object.entries(M).sort((a,b)=>b[1]-a[1]).slice(0,9);const mx=ent[0][1];
+ const M={};REC.forEach(r=>M[r.bu]=(M[r.bu]||0)+1);const ent=Object.entries(M).sort((a,b)=>b[1]-a[1]).slice(0,9);const mx=ent.length?ent[0][1]:1;
  $('#city').innerHTML='<div class="floor"></div>'+ent.map(([b,n],i)=>{const x=30+(i%3)*110,y=30+Math.floor(i/3)*110,h=Math.max(14,n/mx*120),c=n>150?'#FF453A':n>60?'#FF9F0A':n>20?'#FFD60A':'#30D158';
   return `<div class="tw" style="left:${x}px;top:${y}px;--h:${h}px;--c:${c};animation-delay:${i*80}ms" title="${b}: ${n} records" onclick="x_recFilter('bu','${b}')"><div class="f fa"></div><div class="f fb"></div><div class="f tp"></div><div class="vl">${n}</div><div class="lb">${b}</div></div>`}).join('');
  const W=[1.4,1.1,1.8,1.3,2.2,1.9,2.6,3.9];const w=560,h=180,X=i=>30+i*(w-50)/7,Y=v=>h-24-v/4.5*(h-40);
@@ -159,7 +160,7 @@ RENDER.insights=function(){
   ${W.map((v,i)=>`<circle cx="${X(i)}" cy="${Y(v)}" r="${i===7?6:3.5}" fill="#FF453A"><title>W${39+i}: ${v}%</title></circle><text x="${X(i)}" y="${h-6}" font-size="10" fill="var(--muted)" text-anchor="middle">W${39+i}</text>`).join('')}
   <text x="${X(7)-8}" y="${Y(3.9)-10}" font-size="11" font-weight="700" fill="var(--bad-t)" text-anchor="end">3.9% ↑ +1.3 pts</text></svg>
   <div class="fix">🧠 The jump since W44 is driven by <b>one cause</b>: Voucher definition expired (SG) adds 2.0 pts. Without it the rate would be 1.9%.</div>`;
- const L=Object.entries(HIST).sort((a,b)=>b[1].length-a[1].length);const lm=L[0][1].length+1;
+ const L=Object.entries(HIST).sort((a,b)=>b[1].length-a[1].length);const lm=L.length?L[0][1].length+1:1;
  $('#lead').innerHTML=L.map(([c,H],i)=>`<div class="rbar" style="grid-template-columns:200px 1fr 70px;cursor:pointer" onclick="x_openInc('${c}')"><span>${ERR[c].t}</span><span class="t"><i style="width:${(H.length+1)/lm*100}%;background:linear-gradient(90deg,#7c3aed,#db2777);animation-delay:${i*60}ms"></i></span><b>${H.length+1}× <small style="color:var(--muted);font-weight:500">${H[H.length-1].d}</small></b></div>`).join('');
  const MT=[['Voucher definition expired',310],['Missing email / contact point',1440],['Journal not created (DPE)',190],['API timeout to Marketing Cloud',75],['Member inactive / merged',260],['Tier changed during journey',380]];const mm=Math.max(...MT.map(x=>x[1]));
  $('#mttr').innerHTML=MT.map(([n,m],i)=>`<div class="rbar" style="grid-template-columns:200px 1fr 70px"><span>${n}</span><span class="t"><i style="width:${m/mm*100}%;background:${m>600?'var(--bad)':m>240?'var(--warn)':'var(--ok)'};animation-delay:${i*60}ms"></i></span><b>${m>=60?Math.floor(m/60)+'h '+m%60+'m':m+'m'}</b></div>`).join('')+'<div class="fix">Missing email takes a full day because it waits for the CRM data team load. A POS-side fix removes it entirely.</div>';
