@@ -6,7 +6,7 @@
 .x-kpi:hover{transform:translateY(-3px)}
 .x-kpi .lbl{font-size:11.5px;color:var(--muted);font-weight:500}.x-kpi .v{font-size:27px;font-weight:700;margin-top:4px;letter-spacing:-.02em}
 .x-kpi .s{font-size:11px;color:var(--muted);margin-top:2px}
-.x-kpi.bad .v{color:#ff7a72}.x-kpi.ok .v{color:var(--ok)}.x-kpi.warn .v{color:var(--warn)}
+.x-kpi.bad .v{color:var(--bad-t)}.x-kpi.ok .v{color:var(--ok)}.x-kpi.warn .v{color:var(--warn)}
 .x-grid2{display:grid;grid-template-columns:1.5fr 1fr;gap:12px}.x-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 @media(max-width:1200px){.x-grid2,.x-grid3{grid-template-columns:1fr}}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
@@ -30,7 +30,7 @@ select.inp option{background:#1b2338;color:#fff}
 .smeta{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:4px}
 .sr{font-size:13px;font-weight:700}.sr small{display:block;font-size:10.5px;color:var(--muted);font-weight:500}
 .stbadge{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:99px;white-space:nowrap}
-.stbadge.bad{background:rgba(255,69,58,.18);color:#ff7a72}.stbadge.warn{background:rgba(255,214,10,.15);color:var(--warn)}.stbadge.ok{background:rgba(48,209,88,.15);color:var(--ok)}.stbadge.none{background:rgba(142,142,147,.2);color:#c7c7cc}.stbadge.info{background:rgba(100,210,255,.15);color:var(--info)}
+.stbadge.bad{background:rgba(255,69,58,.18);color:var(--bad-t)}.stbadge.warn{background:rgba(255,214,10,.15);color:var(--warn)}.stbadge.ok{background:rgba(48,209,88,.15);color:var(--ok)}.stbadge.none{background:rgba(142,142,147,.2);color:#c7c7cc}.stbadge.info{background:rgba(100,210,255,.15);color:var(--info)}
 @media(max-width:1100px){.jrow{grid-template-columns:auto 1fr auto}.jrow .steps-w,.jrow .sr,.jrow .spk-w{grid-column:2/-1}}
 /* flow diagram */
 .flow{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:8px 2px 14px}
@@ -42,7 +42,7 @@ select.inp option{background:#1b2338;color:#fff}
 .farrow i{display:block;width:100%;height:2px;background:linear-gradient(90deg,var(--glass-border),var(--info));position:relative;overflow:hidden}
 .farrow i::after{content:"";position:absolute;top:0;left:-40%;width:40%;height:100%;background:#fff;animation:flowdot 1.4s linear infinite}
 .farrow.f i{background:linear-gradient(90deg,var(--bad),rgba(255,69,58,.2))}
-.farrow em{position:absolute;top:calc(50% + 6px);font-size:9.5px;font-style:normal;color:#ff8b84;font-weight:700;white-space:nowrap}
+.farrow em{position:absolute;top:calc(50% + 6px);font-size:9.5px;font-style:normal;color:var(--bad-t);font-weight:700;white-space:nowrap}
 @keyframes flowdot{to{left:110%}}
 /* RCA */
 .rca{padding:16px;border-radius:18px;border:1px solid rgba(100,210,255,.35);background:linear-gradient(135deg,rgba(100,210,255,.10),rgba(191,90,242,.08));margin-top:12px}

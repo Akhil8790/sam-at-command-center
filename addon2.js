@@ -92,7 +92,7 @@ function pfList(){const now=Date.now();const L=UP.slice().sort((a,b)=>nextAt(a.t
   <div class="nm"><b>${esc(u.j.n)}</b><small>${u.j.bu} · ${u.j.p} · starts ${u.t} local</small></div>
   <div class="cd" data-at="${nextAt(u.t).getTime()}">--<small>until start</small></div>
   <div><div class="pbar"><i style="width:${Math.max(0,100-u.rate)}%;background:var(--ok)"></i><i style="width:${u.excluded?0:Math.min(100,u.rate)}%;background:var(--bad)"></i></div>
-  <div class="pmeta">${fmt(u.aud)} in audience · <b style="color:${f?'#ff8b84':'var(--ok)'}">${fmt(f)} predicted to fail</b>${u.excluded?' · at-risk excluded ✓':''}</div>
+  <div class="pmeta">${fmt(u.aud)} in audience · <b style="color:${f?'var(--bad-t)':'var(--ok)'}">${fmt(f)} predicted to fail</b>${u.excluded?' · at-risk excluded ✓':''}</div>
   <div style="margin-top:4px">${fails.slice(0,2).map(c=>`<span class="rchip">${c.code?ERR[c.code].t:esc(c.note)}${c.n?' · '+fmt(c.n):''}</span>`).join('')}${warns.slice(0,1).map(c=>`<span class="rchip w">${esc(c.note||c.n)}</span>`).join('')}</div></div>
   <div class="sr num">${(100-(u.excluded?0:u.rate)).toFixed(1)}%<small>predicted</small></div><div><span class="verdict ${u.excluded&&u.verdict!=='stop'?'go':u.verdict}">${VLAB[u.excluded&&u.verdict!=='stop'?'go':u.verdict]}</span></div></div>`}).join('');
  tickCd()}
@@ -105,7 +105,7 @@ window.x_pf=function(id){const u=UP.find(x=>x.id===id);const d=$('#drawer');d.cl
  <div style="color:var(--muted)">Starts ${u.t} local · in <b class="cd" data-at="${nextAt(u.t).getTime()}" style="font-size:13px">${fmtLeft(ms)}<small style="display:none"></small></b></div>
  <span class="verdict ${u.verdict}" style="display:inline-block;margin-top:10px">${VLAB[u.verdict]} · ${u.verdict==='stop'?'do not run until fixed':u.verdict==='warn'?'run after a quick check':'safe to run'}</span></div><button class="iconbtn" onclick="closeAll()">✕</button></div>
  <div class="kgrid num"><div><b>${fmt(u.aud)}</b><span>Audience</span></div><div><b style="color:var(--bad)">${fmt(u.excluded?0:u.fail)}</b><span>Predicted failures</span></div><div><b>${(100-(u.excluded?0:u.rate)).toFixed(1)}%</b><span>Predicted success</span></div><div><b>${u.checks.filter(c=>c.st==='p').length}/${u.checks.length}</b><span>Checks passing</span></div></div>
- <h4 style="font-size:14px">Pre-flight checks</h4>${u.checks.map(c=>`<div class="pf"><span class="ic ${c.st}">${c.st==='p'?'✓':c.st==='w'?'!':'✕'}</span><div><b>${c.n}</b><small>${c.note||(c.st==='p'?'Pass':'')}</small></div><b class="num" style="color:${c.st==='f'?'#ff8b84':c.st==='w'?'var(--warn)':'var(--muted)'}">${c.n&&c.st!=='p'?fmt(c.n):''}</b></div>`).join('')}
+ <h4 style="font-size:14px">Pre-flight checks</h4>${u.checks.map(c=>`<div class="pf"><span class="ic ${c.st}">${c.st==='p'?'✓':c.st==='w'?'!':'✕'}</span><div><b>${c.n}</b><small>${c.note||(c.st==='p'?'Pass':'')}</small></div><b class="num" style="color:${c.st==='f'?'var(--bad-t)':c.st==='w'?'var(--warn)':'var(--muted)'}">${c.n&&c.st!=='p'?fmt(c.n):''}</b></div>`).join('')}
  ${u.checks.filter(c=>c.st==='f'&&c.code).map(c=>`<div class="rca"><h5>🧠 Predicted cause · ${ERR[c.code].t}</h5><p>${ERR[c.code].rc}</p>${rep(c.code).length?`<div class="back" style="margin-top:8px">🔁 This already failed ${rep(c.code).length} times (last ${rep(c.code).slice(-1)[0].d}). Fix before the run to break the repeat.</div>`:''}
   <div class="ts"><h6>Fix before ${u.t}</h6>${ERR[c.code].fix.slice(0,4).map((s,i)=>`<div class="tstep" onclick="x_tick(this)"><span class="n">${i+1}</span><span>${s}</span></div>`).join('')}</div></div>`).join('')}
  ${risk.length?`<div class="drec"><h4>Records at risk <small style="color:var(--muted);font-weight:500">sample from today's failures</small></h4>${recTable(risk)}</div>`:''}
@@ -120,7 +120,7 @@ RENDER.preflight=function(){pfKpis();pfList();$$('#pfF .chip').forEach(c=>c.oncl
  const RAD=[['Voucher def · SG Welcome 500 pts',-2,'Used by SG Welcome series + SG Birthday'],['Voucher def · TH Black Birthday',6,'TH Black Birthday voucher'],['Voucher def · MY Points bonus',11,'MY Points expiry reminder'],['Tier Black ends · 214 MY members',7,'MY Black renewal reminder'],['Escrow release · SSMY…1133',7,'Stuck escrow watch item'],['API certificate · MC connected app',19,'All MC journeys'],['Voucher def · KR Tier gift',27,'KR Tier upgrade congrats']];
  $('#radar').innerHTML=RAD.map(([n,dd,u])=>`<div><b style="font-size:12.5px">${n}</b><div style="font-size:10.5px;color:var(--muted)">${u}</div></div><div class="d ${dd<=7?'bad':dd<=14?'warn':''}">${dd<0?'expired':dd+'d'}</div><div class="pbar"><i style="width:${Math.max(4,100-Math.max(0,dd)/30*100)}%;background:${dd<=7?'var(--bad)':dd<=14?'var(--warn)':'var(--ok)'}"></i></div>`).join('');
  const CF=[['TH Black Birthday voucher','TH AT Welcome',48,'18:00 + 13:30 next day'],['SG Welcome series','SG Birthday double points',61,'19:30 + 20:00 – 30 min apart'],['KR Tier upgrade congrats','KR Points expiry reminder',22,'21:15 + 23:30'],['HK Lapsed win-back','HK Silver anniversary',9,'08:30 + 09:00']];
- $('#conf').innerHTML=CF.map(([a,b,n,t])=>`<div class="conf2"><div><b>${a}</b> × <b>${b}</b><small>${t}</small></div><b class="num" style="color:${n>40?'#ff8b84':'var(--warn)'}">${n} members</b></div>`).join('')+`<div class="fix">💡 Add a 24 h frequency cap or a suppression between journeys in the same market. ${CF.reduce((a,c)=>a+c[2],0)} members would get 2 messages within hours.</div>`};
+ $('#conf').innerHTML=CF.map(([a,b,n,t])=>`<div class="conf2"><div><b>${a}</b> × <b>${b}</b><small>${t}</small></div><b class="num" style="color:${n>40?'var(--bad-t)':'var(--warn)'}">${n} members</b></div>`).join('')+`<div class="fix">💡 Add a 24 h frequency cap or a suppression between journeys in the same market. ${CF.reduce((a,c)=>a+c[2],0)} members would get 2 messages within hours.</div>`};
 
 /* =============== 3. FOLDERS PAGE =============== */
 mk('viewFolders',`<section class="x-head glass"><div><div class="crumbs">Dashboard › <b>Folders</b></div><h2>📁 Result folders</h2><p>Every BU and check output, grouped on shelves. Open a folder to see its findings and the records behind them.</p></div></section><div id="foldHost" style="display:flex;flex-direction:column;gap:12px"></div>`);
@@ -157,7 +157,7 @@ RENDER.insights=function(){
   <path d="${W.map((v,i)=>(i?'L':'M')+X(i)+' '+Y(v)).join(' ')} L${X(7)} ${Y(0)} L${X(0)} ${Y(0)}Z" fill="rgba(255,69,58,.14)"/>
   <path d="${W.map((v,i)=>(i?'L':'M')+X(i)+' '+Y(v)).join(' ')}" fill="none" stroke="#FF453A" stroke-width="2.4" style="stroke-dasharray:1200;stroke-dashoffset:1200;animation:draw 1.4s forwards"/>
   ${W.map((v,i)=>`<circle cx="${X(i)}" cy="${Y(v)}" r="${i===7?6:3.5}" fill="#FF453A"><title>W${39+i}: ${v}%</title></circle><text x="${X(i)}" y="${h-6}" font-size="10" fill="var(--muted)" text-anchor="middle">W${39+i}</text>`).join('')}
-  <text x="${X(7)-8}" y="${Y(3.9)-10}" font-size="11" font-weight="700" fill="#ff7a72" text-anchor="end">3.9% ↑ +1.3 pts</text></svg>
+  <text x="${X(7)-8}" y="${Y(3.9)-10}" font-size="11" font-weight="700" fill="var(--bad-t)" text-anchor="end">3.9% ↑ +1.3 pts</text></svg>
   <div class="fix">🧠 The jump since W44 is driven by <b>one cause</b>: Voucher definition expired (SG) adds 2.0 pts. Without it the rate would be 1.9%.</div>`;
  const L=Object.entries(HIST).sort((a,b)=>b[1].length-a[1].length);const lm=L[0][1].length+1;
  $('#lead').innerHTML=L.map(([c,H],i)=>`<div class="rbar" style="grid-template-columns:200px 1fr 70px;cursor:pointer" onclick="x_openInc('${c}')"><span>${ERR[c].t}</span><span class="t"><i style="width:${(H.length+1)/lm*100}%;background:linear-gradient(90deg,#7c3aed,#db2777);animation-delay:${i*60}ms"></i></span><b>${H.length+1}× <small style="color:var(--muted);font-weight:500">${H[H.length-1].d}</small></b></div>`).join('');
@@ -211,5 +211,6 @@ const ps=document.createElement('style');ps.textContent='.bird,.bird *,.orb,.orb
 /* bottom nav: add pre-flight */
 const bn=document.querySelector('.bottomnav');if(bn){bn.children[3].setAttribute('onclick',"x_show('preflight')");bn.children[3].lastChild.textContent='Pre-flight'}
 addEventListener('keydown',e=>{if(/input|textarea|select/i.test(e.target.tagName))return;if(window._g){if(e.key==='p')x_show('preflight');if(e.key==='i')x_show('insights');if(e.key==='f')x_show('folders')}});
+Object.assign(window.X,{HIST,UP,nextAt,fmtLeft,VLAB,rep,LS,tickCd,BACK,PERM,FIXED});
 addBirds();const h=location.hash.slice(1);if(['preflight','folders','insights'].includes(h))setTimeout(()=>x_show(h),30);
 })();
