@@ -62,14 +62,32 @@ window.openDrawer=function(b){if(!b)return;_od(b);const d=$('#drawer');d.classLi
  const hdrX=xb.querySelector('.iconbtn');if(hdrX)hdrX.remove();bindRecRows(d)};
 ['x_openJ','x_openInc','x_openRec','x_pf'].forEach(fn=>{const o=window[fn];window[fn]=function(){$('#drawer').classList.remove('xl');return o.apply(this,arguments)}});
 
-/* ---------- solar system on home ---------- */
-const PL=[['Mercury',30,3,'#b8b0a6',4.2],['Venus',44,5,'#e9c27b',6.5],['Earth',60,5.5,'radial-gradient(circle at 35% 35%,#9fd3ff,#2f7de0 55%,#1d4f9c)',9,'earth'],['Mars',75,4.5,'radial-gradient(circle at 35% 35%,#ffab85,#d9532b)',13],
- ['Jupiter',95,11,'repeating-linear-gradient(0deg,#d9b38c 0 2px,#b98a5e 2px 4px,#e8cfae 4px 6px)',22],['Saturn',116,9,'radial-gradient(circle at 35% 35%,#f4e2b5,#caa864)',30,'saturn'],['Uranus',134,7,'radial-gradient(circle at 35% 35%,#d8fbff,#7fd8e8)',44],['Neptune',150,7,'radial-gradient(circle at 35% 35%,#9fb3ff,#3b5bdb)',58]];
-const hero=$('.hero');const sol=document.createElement('div');sol.className='sol';sol.title='Health 82 / 100';
-sol.innerHTML=`<span class="tip">Health 82/100 · 14 of 19 BUs clean</span><div class="heat"></div><div class="plane">${PL.map(([n,r,s,c,t,k],i)=>`<div class="orbit" style="width:${Math.round(r*1.3)}px;height:${Math.round(r*1.3)}px;animation-duration:${t}s;animation-delay:-${(i*3.7)%t}s"><div class="pl ${k||''}" style="width:${s}px;height:${s}px;margin-left:0;animation-delay:-${(i*3.7)%t}s" title="${n}"><i style="background:${c};box-shadow:inset -${s/3}px -${s/4}px ${s/2}px rgba(0,0,0,.55),0 0 ${s/2}px rgba(255,190,90,.25)"></i>${k==='earth'?'<span class="moon"><b></b></span>':''}</div></div>`).join('')}</div><div class="sun"></div>
- <div class="score"><b class="num">82</b>HEALTH · 14/19 CLEAN</div>`;
-hero.insertBefore(sol,hero.firstChild);sol.onclick=()=>toast('☀️','Health 82 / 100','14 of 19 business units clean · 5 need action','ok');
-const ps=document.createElement('style');ps.textContent='.sol *,.sol *::before,.sol *::after{animation-play-state:var(--ps,running)}';document.head.appendChild(ps);
+/* ---------- market orrery on home: sun = overall health, one planet per market ---------- */
+(function(){
+ const score=82,sunTone=score>=85?'gold':score>=70?'amber':'flare';
+ // [market, code, member base (k, drives size), planet hue]
+ const M=[['SG 5010','SG',42,'#7FB7FF'],['HK 5090','HK',31,'#B9A7FF'],['TH 5640','TH',58,'#FFC58A'],['TW 5060','TW',37,'#8FE3D0'],['MY 5050','MY',64,'#F7A8C4'],['JP 5630','JP',28,'#E8E2D4'],['KR 5040','KR',46,'#9FD0FF'],['TUMI','TU',22,'#D6D9E0']];
+ const stOf=k=>{const b=BUS.find(x=>x.k===k)||{};const js=J.filter(j=>j.bu===k);const bad=b.st==='bad'||js.some(j=>j.st==='bad');const warn=!bad&&(b.i>0||js.some(j=>j.st==='warn'||j.st==='none'));
+  const open=REC.filter(r=>r.bu===k&&r.st==='Open').length;return {s:bad?'bad':warn?'warn':'ok',open,js:js.length,fail:js.filter(j=>j.st==='bad').length,name:b.m||k}};
+ const R0=44,GAP=13;
+ const hero=$('.hero');const sol=document.createElement('div');sol.className='orr';sol.setAttribute('role','img');
+ sol.setAttribute('aria-label','Overall health '+score+' of 100. '+M.map(m=>m[0]+' '+stOf(m[0]).s).join(', '));
+ const lab=s=>s==='bad'?'Needs action':s==='warn'?'Watch':'Clean';
+ sol.innerHTML=`<div class="orr-stage"><div class="orr-plane">${M.map((m,i)=>{const [k,code,sz,hue]=m,st=stOf(k),r=R0+i*GAP,d=(18+i*7.5).toFixed(1),ph=-((i*137.5)%360)/360*d;
+   const px=Math.round(7+sz/64*9);
+   return `<div class="orr-orbit ${st.s}" style="--r:${r}px;--d:${d}s;--ph:${ph.toFixed(2)}s"><div class="orr-arm"><button class="orr-p ${st.s}" style="--s:${px}px;--hue:${hue}" data-k="${k}" aria-label="${k}: ${lab(st.s)}, ${st.open} open records"><span class="orr-body"></span>${st.s!=='ok'?'<span class="orr-pulse"></span>':''}<span class="orr-tag">${code}</span></button></div></div>`}).join('')}</div>
+   <div class="orr-sun ${sunTone}"><span class="orr-corona"></span><span class="orr-glow"></span><span class="orr-core"><b class="num">${score}</b></span></div></div>
+  <div class="orr-cap"><span>Health</span><span class="orr-key"><i class="ok"></i>${M.filter(m=>stOf(m[0]).s==='ok').length}<i class="warn"></i>${M.filter(m=>stOf(m[0]).s==='warn').length}<i class="bad"></i>${M.filter(m=>stOf(m[0]).s==='bad').length}</span><span>markets</span></div>
+  <div class="orr-card" aria-hidden="true"></div>`;
+ hero.insertBefore(sol,hero.firstChild);
+ const card=sol.querySelector('.orr-card');const hide=()=>{sol.classList.remove('hold');card.classList.remove('on')};
+ sol.querySelectorAll('.orr-p').forEach(p=>{const k=p.dataset.k,st=stOf(k);
+  const show=()=>{sol.classList.add('hold');card.innerHTML=`<b>${esc(k)}</b><span>${esc(st.name)}</span><em class="${st.s}">${lab(st.s)}</em><small>${st.open} open records · ${st.js} journeys${st.fail?' · '+st.fail+' failing':''}</small><small>Click to open</small>`;card.classList.add('on')};
+  p.addEventListener('pointerenter',show);p.addEventListener('focus',show);p.addEventListener('pointerleave',hide);p.addEventListener('blur',hide);
+  p.addEventListener('click',e=>{e.stopPropagation();const b=BUS.find(x=>x.k===k);if(b)openDrawer(b)})});
+ sol.querySelector('.orr-sun').addEventListener('click',()=>toast('☀️','Health '+score+' / 100','14 of 19 business units clean · 5 need action','ok'));
+ const ps=document.createElement('style');ps.textContent='.orr *,.orr *::before,.orr *::after{animation-play-state:var(--ps,running)}.orr.hold .orr-orbit,.orr.hold .orr-p{animation-play-state:paused!important}';document.head.appendChild(ps);
+})();
 
 /* ---------- Insights: replace 3D towers with heat matrix + pareto ---------- */
 const _ri=RENDER.insights;RENDER.insights=function(){_ri();const panel=$('#city')&&$('#city').closest('.panel');if(!panel)return;

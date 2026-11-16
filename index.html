@@ -786,37 +786,53 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display"
 .tierrow{display:grid;grid-template-columns:110px 1fr 60px;gap:10px;align-items:center;font-size:var(--fs-sm);margin:7px 0}
 .tierrow .t{height:14px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden}.tierrow .t i{display:block;height:100%;border-radius:6px;animation:growx .9s both;transform-origin:left}
 
-/* ---- solar system (replaces orb) ---- */
-.orb-w{display:none!important}
-.sol{position:relative;width:220px;height:190px;flex:none;perspective:700px;cursor:pointer}
-.sol .plane{position:absolute;left:50%;top:44%;width:0;height:0;transform-style:preserve-3d;transform:rotateX(62deg)}
-.sol .orbit{position:absolute;left:0;top:0;border-radius:50%;border:1px solid rgba(255,255,255,.13);transform-style:preserve-3d;animation:solO linear infinite;will-change:transform}
-.sol .orbit .pl{position:absolute;left:50%;top:0;border-radius:50%;transform-style:preserve-3d;animation:solP linear infinite;animation-duration:inherit}
-.sol .orbit .pl i{display:block;width:100%;height:100%;border-radius:50%;transform:translate(-50%,-50%)}
-@keyframes solO{from{transform:translate(-50%,-50%) rotateZ(0deg)}to{transform:translate(-50%,-50%) rotateZ(360deg)}}
-@keyframes solP{from{transform:rotateZ(0) rotateX(-62deg)}to{transform:rotateZ(-360deg) rotateX(-62deg)}}
-.sol .orbit{transform:translate(-50%,-50%)}
-.sol .sun{position:absolute;left:50%;top:44%;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;
- background:radial-gradient(circle at 38% 35%,#fffbe0 0,#ffe36b 22%,#ffb21a 55%,#ff6a00 85%,#d13a00 100%);
- box-shadow:0 0 18px 6px rgba(255,170,30,.75),0 0 46px 16px rgba(255,110,0,.35),0 0 90px 30px rgba(255,80,0,.15);z-index:3}
-.sol .sun::before{content:"";position:absolute;inset:-16px;border-radius:50%;background:radial-gradient(circle,rgba(255,200,60,.55) 0,rgba(255,140,0,.18) 45%,transparent 70%);animation:solHeat 2.6s ease-in-out infinite}
-.sol .sun::after{content:"";position:absolute;inset:-26px;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(255,190,60,.22) 0 6deg,transparent 6deg 20deg);
- -webkit-mask:radial-gradient(circle,transparent 42%,#000 46%,transparent 72%);mask:radial-gradient(circle,transparent 42%,#000 46%,transparent 72%);animation:solRays 14s linear infinite}
-@keyframes solHeat{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.22);opacity:.45}}
-@keyframes solRays{to{transform:rotate(360deg)}}
-.sol .heat{position:absolute;left:50%;top:44%;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;background:radial-gradient(circle,rgba(255,140,0,.22),transparent 60%);animation:solHeat 4s ease-in-out infinite;pointer-events:none}
-.sol .saturn i{position:relative}
-.sol .saturn i::after{content:"";position:absolute;left:50%;top:50%;width:230%;height:60%;transform:translate(-50%,-50%) rotate(-18deg);border-radius:50%;border:2px solid rgba(230,205,150,.85);box-shadow:0 0 4px rgba(230,205,150,.5)}
-.sol .earth i{position:relative}
-.sol .moon{position:absolute;left:50%;top:50%;width:0;height:0;animation:solMoon 2.4s linear infinite}
-.sol .moon b{position:absolute;left:8px;top:-1.5px;width:3px;height:3px;border-radius:50%;background:#d8d8d8}
-@keyframes solMoon{to{transform:rotate(360deg)}}
-.sol .score{position:absolute;left:0;right:0;bottom:-2px;text-align:center;font-size:var(--fs-xs);color:var(--muted);font-weight:600;letter-spacing:.04em}
-.sol .score b{font-size:15px;color:var(--text);margin-right:4px}
-.sol .tip{position:absolute;left:50%;top:-6px;transform:translateX(-50%);font-size:10px;white-space:nowrap;padding:3px 8px;border-radius:8px;background:rgba(0,0,0,.55);color:#fff;opacity:0;transition:opacity .2s;pointer-events:none}
-.sol:hover .tip{opacity:1}
-.sol:hover .orbit{animation-play-state:paused}
-[data-theme="light"] .sol .orbit,[data-theme="sand"] .sol .orbit,[data-theme="pearl"] .sol .orbit{border-color:rgba(15,23,42,.14)}
+/* ---- market orrery: sun = health, one planet per market ---- */
+.orb-w,.sol{display:none!important}
+.orr{position:relative;width:300px;height:196px;flex:none;--tilt:64deg;--line:rgba(255,255,255,.12);--tag-bg:rgba(10,14,28,.74);--tag-fg:#eef2ff}
+[data-theme="light"] .orr,[data-theme="sand"] .orr,[data-theme="pearl"] .orr{--line:rgba(15,23,42,.14);--tag-bg:rgba(255,255,255,.94);--tag-fg:#0f172a}
+.orr-stage{position:absolute;inset:0 0 24px 0;perspective:900px}
+.orr-plane{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;transform:rotateX(var(--tilt)) rotateZ(-8deg)}
+.orr-orbit{position:absolute;left:0;top:0;width:calc(var(--r)*2);height:calc(var(--r)*2);margin:calc(var(--r)*-1) 0 0 calc(var(--r)*-1);border-radius:50%;
+ border:1px solid var(--line);transform-style:preserve-3d;animation:orrSpin var(--d) linear infinite;animation-delay:var(--ph);will-change:transform}
+.orr-orbit.bad{border-color:color-mix(in srgb,var(--bad) 45%,var(--line))}
+.orr-orbit.warn{border-style:dashed;border-color:color-mix(in srgb,var(--warn) 45%,var(--line))}
+.orr-arm{position:absolute;left:50%;top:0;width:0;height:0;transform-style:preserve-3d}
+@keyframes orrSpin{from{transform:rotateZ(0deg)}to{transform:rotateZ(360deg)}}
+.orr-p{position:absolute;left:0;top:0;width:var(--s);height:var(--s);margin:calc(var(--s)/-2) 0 0 calc(var(--s)/-2);padding:0;border:0;background:none;cursor:pointer;border-radius:50%;
+ transform-style:preserve-3d;animation:orrFace var(--d) linear infinite;animation-delay:var(--ph);outline:none}
+@keyframes orrFace{from{transform:rotateZ(0deg) rotateZ(8deg) rotateX(-64deg)}to{transform:rotateZ(-360deg) rotateZ(8deg) rotateX(-64deg)}}
+.orr-body{position:absolute;inset:0;border-radius:50%;
+ background:radial-gradient(circle at 34% 30%,#fff 0,color-mix(in srgb,var(--hue) 70%,#fff) 14%,var(--hue) 46%,color-mix(in srgb,var(--hue) 42%,#0b1020) 100%);
+ box-shadow:inset calc(var(--s)*-.28) calc(var(--s)*-.22) calc(var(--s)*.4) rgba(5,8,20,.55),0 0 0 1.5px var(--rim),0 2px 6px rgba(0,0,0,.35);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.orr-p.ok{--rim:color-mix(in srgb,var(--ok) 85%,transparent)}.orr-p.warn{--rim:var(--warn)}.orr-p.bad{--rim:var(--bad)}
+.orr-pulse{position:absolute;inset:-5px;border-radius:50%;border:1.5px solid var(--rim);opacity:0;animation:orrPulse 2.2s cubic-bezier(.2,.8,.2,1) infinite}
+@keyframes orrPulse{0%{transform:scale(.7);opacity:.9}100%{transform:scale(1.6);opacity:0}}
+.orr-tag{position:absolute;left:50%;top:calc(100% + 3px);transform:translateX(-50%);font-size:9.5px;font-weight:700;letter-spacing:.04em;line-height:1;padding:2px 4px;border-radius:4px;
+ background:var(--tag-bg);color:var(--tag-fg);white-space:nowrap;pointer-events:none}
+.orr-p:hover .orr-body,.orr-p:focus-visible .orr-body{transform:scale(1.35)}
+.orr-p:focus-visible .orr-body{box-shadow:0 0 0 2px var(--accent),0 0 0 4px rgba(10,132,255,.3)}
+.orr-sun{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;cursor:pointer;z-index:2;--c1:#fff6d6;--c2:#ffd166;--c3:#ff9f1c;--c4:#e85d04}
+.orr-sun.amber{--c2:#ffbf69;--c3:#ff8c42;--c4:#d9480f}.orr-sun.flare{--c2:#ff9b85;--c3:#ff5d5d;--c4:#c1121f}
+.orr-core{position:absolute;inset:0;border-radius:50%;display:grid;place-items:center;
+ background:radial-gradient(circle at 38% 34%,var(--c1) 0,var(--c2) 30%,var(--c3) 64%,var(--c4) 100%);
+ box-shadow:0 4px 18px -2px color-mix(in srgb,var(--c3) 70%,transparent),inset -6px -8px 14px rgba(140,30,0,.35)}
+.orr-core b{font-size:15px;font-weight:800;color:#4a1600;letter-spacing:-.02em}
+.orr-glow{position:absolute;inset:-22px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--c2) 55%,transparent) 0,color-mix(in srgb,var(--c3) 18%,transparent) 42%,transparent 70%);animation:orrHeat 3.6s ease-in-out infinite}
+.orr-corona{position:absolute;inset:-14px;border-radius:50%;filter:blur(5px);animation:orrRot 24s linear infinite;
+ background:conic-gradient(from 0deg,transparent 0 8%,color-mix(in srgb,var(--c2) 50%,transparent) 12%,transparent 18% 33%,color-mix(in srgb,var(--c3) 45%,transparent) 38%,transparent 45% 58%,color-mix(in srgb,var(--c2) 50%,transparent) 63%,transparent 70% 83%,color-mix(in srgb,var(--c3) 45%,transparent) 88%,transparent 95%)}
+@keyframes orrHeat{0%,100%{transform:scale(.92);opacity:.75}50%{transform:scale(1.12);opacity:1}}
+@keyframes orrRot{to{transform:rotate(360deg)}}
+.orr-cap{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:8px;align-items:center;font-size:11px;font-weight:600;color:var(--muted)}
+.orr-key{display:inline-flex;gap:4px;align-items:center;color:var(--text);font-variant-numeric:tabular-nums}
+.orr-key i{width:8px;height:8px;border-radius:50%;margin-left:6px}.orr-key i.ok{background:var(--ok)}.orr-key i.warn{background:var(--warn)}.orr-key i.bad{background:var(--bad)}
+.orr-card{position:absolute;right:-8px;top:2px;min-width:160px;padding:9px 11px;border-radius:12px;background:var(--glass-strong);border:1px solid var(--glass-border);box-shadow:0 10px 24px -8px rgba(0,0,0,.45);
+ display:flex;flex-direction:column;gap:2px;font-size:11px;opacity:0;transform:translateY(4px);transition:opacity .18s,transform .25s cubic-bezier(.2,.8,.2,1);pointer-events:none;z-index:4}
+.orr-card.on{opacity:1;transform:none}
+.orr-card b{font-size:13px}.orr-card span{color:var(--muted)}.orr-card small{color:var(--text-2)}
+.orr-card em{font-style:normal;font-weight:700;font-size:10.5px}.orr-card em.ok{color:var(--ok)}.orr-card em.warn{color:var(--warn)}.orr-card em.bad{color:var(--bad-t)}
+@media (max-width:768px){.orr{width:260px;height:180px}}
+@media (prefers-reduced-motion:reduce){.orr *{animation:none!important}}
+[data-motion="off"] .orr *{animation:none!important}
 
 /* ---- info button + popover ---- */
 .ib{width:30px;height:30px;border-radius:50%;border:1px solid var(--glass-border);background:rgba(255,255,255,.08);color:var(--text);font:inherit;font-weight:700;font-size:14px;font-style:italic;font-family:Georgia,serif;cursor:pointer;flex:none;transition:transform .2s var(--ease-spring),background .15s}
@@ -889,7 +905,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display"
 .tline .nowl::before{content:"NOW";position:absolute;top:-16px;left:-12px;font-size:9px;font-weight:800;color:var(--bad-t)}
 .tline .axis{display:grid;grid-template-columns:200px 1fr;gap:10px;font-size:10px;color:var(--muted);margin-top:4px}
 .tline .axis div{display:flex;justify-content:space-between}
-@media(prefers-reduced-motion:reduce){.sol *{animation:none!important}}
+
+/* orrery hover card sits under the system, replacing the caption */
+.orr-card{left:50%!important;right:auto!important;top:auto!important;bottom:-6px;min-width:0;width:max-content;max-width:300px;flex-direction:row!important;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:1px 8px!important;padding:6px 11px!important;transform:translate(-50%,4px)!important}
+.orr-card.on{transform:translate(-50%,0)!important}
+.orr-card small:last-child{display:none}
+.orr-cap{transition:opacity .15s}.orr.hold .orr-cap{opacity:0}
 
 </style>
 </head>
@@ -2136,14 +2157,32 @@ window.openDrawer=function(b){if(!b)return;_od(b);const d=$('#drawer');d.classLi
  const hdrX=xb.querySelector('.iconbtn');if(hdrX)hdrX.remove();bindRecRows(d)};
 ['x_openJ','x_openInc','x_openRec','x_pf'].forEach(fn=>{const o=window[fn];window[fn]=function(){$('#drawer').classList.remove('xl');return o.apply(this,arguments)}});
 
-/* ---------- solar system on home ---------- */
-const PL=[['Mercury',30,3,'#b8b0a6',4.2],['Venus',44,5,'#e9c27b',6.5],['Earth',60,5.5,'radial-gradient(circle at 35% 35%,#9fd3ff,#2f7de0 55%,#1d4f9c)',9,'earth'],['Mars',75,4.5,'radial-gradient(circle at 35% 35%,#ffab85,#d9532b)',13],
- ['Jupiter',95,11,'repeating-linear-gradient(0deg,#d9b38c 0 2px,#b98a5e 2px 4px,#e8cfae 4px 6px)',22],['Saturn',116,9,'radial-gradient(circle at 35% 35%,#f4e2b5,#caa864)',30,'saturn'],['Uranus',134,7,'radial-gradient(circle at 35% 35%,#d8fbff,#7fd8e8)',44],['Neptune',150,7,'radial-gradient(circle at 35% 35%,#9fb3ff,#3b5bdb)',58]];
-const hero=$('.hero');const sol=document.createElement('div');sol.className='sol';sol.title='Health 82 / 100';
-sol.innerHTML=`<span class="tip">Health 82/100 · 14 of 19 BUs clean</span><div class="heat"></div><div class="plane">${PL.map(([n,r,s,c,t,k],i)=>`<div class="orbit" style="width:${Math.round(r*1.3)}px;height:${Math.round(r*1.3)}px;animation-duration:${t}s;animation-delay:-${(i*3.7)%t}s"><div class="pl ${k||''}" style="width:${s}px;height:${s}px;margin-left:0;animation-delay:-${(i*3.7)%t}s" title="${n}"><i style="background:${c};box-shadow:inset -${s/3}px -${s/4}px ${s/2}px rgba(0,0,0,.55),0 0 ${s/2}px rgba(255,190,90,.25)"></i>${k==='earth'?'<span class="moon"><b></b></span>':''}</div></div>`).join('')}</div><div class="sun"></div>
- <div class="score"><b class="num">82</b>HEALTH · 14/19 CLEAN</div>`;
-hero.insertBefore(sol,hero.firstChild);sol.onclick=()=>toast('☀️','Health 82 / 100','14 of 19 business units clean · 5 need action','ok');
-const ps=document.createElement('style');ps.textContent='.sol *,.sol *::before,.sol *::after{animation-play-state:var(--ps,running)}';document.head.appendChild(ps);
+/* ---------- market orrery on home: sun = overall health, one planet per market ---------- */
+(function(){
+ const score=82,sunTone=score>=85?'gold':score>=70?'amber':'flare';
+ // [market, code, member base (k, drives size), planet hue]
+ const M=[['SG 5010','SG',42,'#7FB7FF'],['HK 5090','HK',31,'#B9A7FF'],['TH 5640','TH',58,'#FFC58A'],['TW 5060','TW',37,'#8FE3D0'],['MY 5050','MY',64,'#F7A8C4'],['JP 5630','JP',28,'#E8E2D4'],['KR 5040','KR',46,'#9FD0FF'],['TUMI','TU',22,'#D6D9E0']];
+ const stOf=k=>{const b=BUS.find(x=>x.k===k)||{};const js=J.filter(j=>j.bu===k);const bad=b.st==='bad'||js.some(j=>j.st==='bad');const warn=!bad&&(b.i>0||js.some(j=>j.st==='warn'||j.st==='none'));
+  const open=REC.filter(r=>r.bu===k&&r.st==='Open').length;return {s:bad?'bad':warn?'warn':'ok',open,js:js.length,fail:js.filter(j=>j.st==='bad').length,name:b.m||k}};
+ const R0=44,GAP=13;
+ const hero=$('.hero');const sol=document.createElement('div');sol.className='orr';sol.setAttribute('role','img');
+ sol.setAttribute('aria-label','Overall health '+score+' of 100. '+M.map(m=>m[0]+' '+stOf(m[0]).s).join(', '));
+ const lab=s=>s==='bad'?'Needs action':s==='warn'?'Watch':'Clean';
+ sol.innerHTML=`<div class="orr-stage"><div class="orr-plane">${M.map((m,i)=>{const [k,code,sz,hue]=m,st=stOf(k),r=R0+i*GAP,d=(18+i*7.5).toFixed(1),ph=-((i*137.5)%360)/360*d;
+   const px=Math.round(7+sz/64*9);
+   return `<div class="orr-orbit ${st.s}" style="--r:${r}px;--d:${d}s;--ph:${ph.toFixed(2)}s"><div class="orr-arm"><button class="orr-p ${st.s}" style="--s:${px}px;--hue:${hue}" data-k="${k}" aria-label="${k}: ${lab(st.s)}, ${st.open} open records"><span class="orr-body"></span>${st.s!=='ok'?'<span class="orr-pulse"></span>':''}<span class="orr-tag">${code}</span></button></div></div>`}).join('')}</div>
+   <div class="orr-sun ${sunTone}"><span class="orr-corona"></span><span class="orr-glow"></span><span class="orr-core"><b class="num">${score}</b></span></div></div>
+  <div class="orr-cap"><span>Health</span><span class="orr-key"><i class="ok"></i>${M.filter(m=>stOf(m[0]).s==='ok').length}<i class="warn"></i>${M.filter(m=>stOf(m[0]).s==='warn').length}<i class="bad"></i>${M.filter(m=>stOf(m[0]).s==='bad').length}</span><span>markets</span></div>
+  <div class="orr-card" aria-hidden="true"></div>`;
+ hero.insertBefore(sol,hero.firstChild);
+ const card=sol.querySelector('.orr-card');const hide=()=>{sol.classList.remove('hold');card.classList.remove('on')};
+ sol.querySelectorAll('.orr-p').forEach(p=>{const k=p.dataset.k,st=stOf(k);
+  const show=()=>{sol.classList.add('hold');card.innerHTML=`<b>${esc(k)}</b><span>${esc(st.name)}</span><em class="${st.s}">${lab(st.s)}</em><small>${st.open} open records · ${st.js} journeys${st.fail?' · '+st.fail+' failing':''}</small><small>Click to open</small>`;card.classList.add('on')};
+  p.addEventListener('pointerenter',show);p.addEventListener('focus',show);p.addEventListener('pointerleave',hide);p.addEventListener('blur',hide);
+  p.addEventListener('click',e=>{e.stopPropagation();const b=BUS.find(x=>x.k===k);if(b)openDrawer(b)})});
+ sol.querySelector('.orr-sun').addEventListener('click',()=>toast('☀️','Health '+score+' / 100','14 of 19 business units clean · 5 need action','ok'));
+ const ps=document.createElement('style');ps.textContent='.orr *,.orr *::before,.orr *::after{animation-play-state:var(--ps,running)}.orr.hold .orr-orbit,.orr.hold .orr-p{animation-play-state:paused!important}';document.head.appendChild(ps);
+})();
 
 /* ---------- Insights: replace 3D towers with heat matrix + pareto ---------- */
 const _ri=RENDER.insights;RENDER.insights=function(){_ri();const panel=$('#city')&&$('#city').closest('.panel');if(!panel)return;
