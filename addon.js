@@ -177,17 +177,18 @@ NEWNAV.forEach(([n,e,v,b])=>{const li=document.createElement('li');li.dataset.n=
 const VIEWS={dash:'viewDash',camp:'viewCamp',journeys:'viewJourneys',rca:'viewRca',records:'viewRecords',ops:'viewOps'};
 const NAVN={dash:'Dashboard',camp:'Campaign failures',journeys:'Journeys & campaigns',rca:'Root-cause center',records:'Record explorer',ops:'Data ops'};
 const CR={dash:'Command Center',camp:'Campaigns',journeys:'Journeys & campaigns',rca:'Root-cause center',records:'Record explorer',ops:'Data ops'};
-const rendered={};
+const rendered={};const RENDER={};
 window.x_show=window.showView=function(v){if(!VIEWS[v])v='dash';closeAll();const sw=()=>{Object.entries(VIEWS).forEach(([k,id])=>{const el=document.getElementById(id);if(el)el.hidden=k!==v});
  $$('.nav li').forEach(x=>x.classList.toggle('active',x.dataset.n===NAVN[v]));$('.topbar .crumbs').innerHTML='Dashboard › <b>'+CR[v]+'</b>';scrollTo({top:0,behavior:'smooth'});
- if(!rendered[v]){try{({journeys:renderJ,rca:renderRca,records:renderRec,ops:renderOps}[v]||(()=>{}))();rendered[v]=1}catch(e){console.error('render '+v,e)}}
- const h={dash:'',camp:'#campaigns',journeys:'#journeys',rca:'#rca',records:'#records',ops:'#ops'}[v];try{if(location.hash!==h)history.replaceState(null,'',h||location.pathname)}catch(e){}
+ if(!rendered[v]){try{(RENDER[v]||(()=>{}))();rendered[v]=1}catch(e){console.error('render '+v,e)}}
+ const h=v==='dash'?'':v==='camp'?'#campaigns':'#'+v;try{if(location.hash!==h)history.replaceState(null,'',h||location.pathname)}catch(e){}
  requestAnimationFrame(()=>{countAll(document.getElementById(VIEWS[v]));addBirds()})};
  if(document.startViewTransition&&motionOn)document.startViewTransition(sw);else sw()};
 function countAll(root){if(!root)return;root.querySelectorAll('.x-kpi .v[data-v]').forEach(el=>{if(el.dataset.v!==''&&!el.dataset.done){el.dataset.done=1;countUp(el,+el.dataset.v)}})}
 window.addEventListener('hashchange',()=>{const v=location.hash.slice(1);x_show(v==='campaigns'?'camp':v||'dash')});
 
 /* ---------------- Journeys view ---------------- */
+setTimeout(()=>Object.assign(RENDER,{journeys:renderJ,rca:renderRca,records:renderRec,ops:renderOps}));
 const SC={bad:'Failing',warn:'Degraded',ok:'Healthy',none:'Not run'};const SE={bad:'⛔',warn:'⚠️',ok:'✅',none:'⏸'};
 let jf='all';
 function renderJ(){
@@ -411,5 +412,6 @@ const cw=$('#campWidget');cw.parentNode.insertBefore(w,cw);countAll(w);
 const bn=document.querySelector('.bottomnav');bn.children[1].setAttribute('onclick',"x_show('journeys')");bn.children[1].lastChild.textContent='Journeys';
 addEventListener('keydown',e=>{if(/input|textarea|select/i.test(e.target.tagName))return;if(window._g){if(e.key==='j')x_show('journeys');if(e.key==='r')x_show('rca');if(e.key==='e')x_show('records');if(e.key==='o')x_show('ops')}});
 document.querySelector('.footer-note').innerHTML='Demo data shaped like the real bot outputs · Read-only on Prod · <span class="kbd">⌘K</span> search (try a member ID) · <span class="kbd">n</span> notifications · <span class="kbd">g</span> then <span class="kbd">j</span>/<span class="kbd">r</span>/<span class="kbd">e</span>/<span class="kbd">o</span> jump · <span class="kbd">Esc</span> close';
-const h=location.hash.slice(1);if(VIEWS[h])x_show(h);
+window.X={J,ERR,REC,INC,errInfo,VIEWS,NAVN,CR,RENDER,rendered,kpiH,esc,fmt,recTable,bindRecRows,SE,SC,mk,countAll,addBirds,dl,copy};
+setTimeout(()=>{const h=location.hash.slice(1);if(VIEWS[h])x_show(h)},0);
 })();
