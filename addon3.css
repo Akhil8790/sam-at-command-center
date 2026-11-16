@@ -83,7 +83,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display"
  background:var(--tag-bg);color:var(--tag-fg);white-space:nowrap;pointer-events:none}
 .orr-p:hover .orr-body,.orr-p:focus-visible .orr-body{transform:scale(1.35)}
 .orr-p:focus-visible .orr-body{box-shadow:0 0 0 2px var(--accent),0 0 0 4px rgba(10,132,255,.3)}
-.orr-sun{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;cursor:pointer;z-index:2;--c1:#fff6d6;--c2:#ffd166;--c3:#ff9f1c;--c4:#e85d04}
+.orr-sun{position:absolute;left:0;top:0;width:46px;height:46px;margin:-23px 0 0 -23px;cursor:pointer;transform:rotateZ(8deg) rotateX(-64deg);--c1:#fff6d6;--c2:#ffd166;--c3:#ff9f1c;--c4:#e85d04}
 .orr-sun.amber{--c2:#ffbf69;--c3:#ff8c42;--c4:#d9480f}.orr-sun.flare{--c2:#ff9b85;--c3:#ff5d5d;--c4:#c1121f}
 .orr-core{position:absolute;inset:0;border-radius:50%;display:grid;place-items:center;
  background:radial-gradient(circle at 38% 34%,var(--c1) 0,var(--c2) 30%,var(--c3) 64%,var(--c4) 100%);
@@ -105,6 +105,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display"
 @media (max-width:768px){.orr{width:260px;height:180px}}
 @media (prefers-reduced-motion:reduce){.orr *{animation:none!important}}
 [data-motion="off"] .orr *{animation:none!important}
+
+/* --- motion upgrade --- */
+.orr-trail{position:absolute;inset:-1px;border-radius:50%;pointer-events:none;
+ background:conic-gradient(from 0deg,transparent 0 70%,color-mix(in srgb,var(--tc) 18%,transparent) 84%,color-mix(in srgb,var(--tc) 85%,transparent) 100%);
+ -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px))}
+.orr-orbit:has(.orr-p:hover),.orr-orbit:has(.orr-p:focus-visible){border-color:color-mix(in srgb,var(--tc) 70%,transparent);border-style:solid}
+.orr-star{position:absolute;width:var(--sz);height:var(--sz);border-radius:50%;background:#fff;opacity:.2;animation:orrTw var(--tw) ease-in-out infinite;animation-delay:var(--td);pointer-events:none}
+[data-theme="light"] .orr-star,[data-theme="sand"] .orr-star,[data-theme="pearl"] .orr-star{background:#64748b}
+@keyframes orrTw{50%{opacity:.85;transform:scale(1.4)}}
+.orr-core{animation:orrBreathe 5s ease-in-out infinite}
+@keyframes orrBreathe{50%{transform:scale(1.05)}}
+.orr.enter .orr-plane{animation:orrIn 1.6s cubic-bezier(.16,1,.3,1) backwards}
+@keyframes orrIn{from{transform:rotateX(82deg) rotateZ(-140deg) scale(.35);opacity:0}}
+.orr.enter .orr-p .orr-body{animation:orrPop .9s cubic-bezier(.34,1.56,.64,1) backwards}
+.orr.enter .orr-orbit:nth-child(2) .orr-body{animation-delay:.1s}.orr.enter .orr-orbit:nth-child(3) .orr-body{animation-delay:.2s}.orr.enter .orr-orbit:nth-child(4) .orr-body{animation-delay:.3s}
+.orr.enter .orr-orbit:nth-child(5) .orr-body{animation-delay:.4s}.orr.enter .orr-orbit:nth-child(6) .orr-body{animation-delay:.5s}.orr.enter .orr-orbit:nth-child(7) .orr-body{animation-delay:.6s}.orr.enter .orr-orbit:nth-child(8) .orr-body{animation-delay:.7s}
+@keyframes orrPop{from{transform:scale(0)}}
 
 /* ---- info button + popover ---- */
 .ib{width:30px;height:30px;border-radius:50%;border:1px solid var(--glass-border);background:rgba(255,255,255,.08);color:var(--text);font:inherit;font-weight:700;font-size:14px;font-style:italic;font-family:Georgia,serif;cursor:pointer;flex:none;transition:transform .2s var(--ease-spring),background .15s}

@@ -73,13 +73,13 @@ window.openDrawer=function(b){if(!b)return;_od(b);const d=$('#drawer');d.classLi
  const hero=$('.hero');const sol=document.createElement('div');sol.className='orr';sol.setAttribute('role','img');
  sol.setAttribute('aria-label','Overall health '+score+' of 100. '+M.map(m=>m[0]+' '+stOf(m[0]).s).join(', '));
  const lab=s=>s==='bad'?'Needs action':s==='warn'?'Watch':'Clean';
- sol.innerHTML=`<div class="orr-stage"><div class="orr-plane">${M.map((m,i)=>{const [k,code,sz,hue]=m,st=stOf(k),r=R0+i*GAP,d=(18+i*7.5).toFixed(1),ph=-((i*137.5)%360)/360*d;
+ const stars=Array.from({length:22},(_,i)=>`<span class="orr-star" style="left:${(i*41.7)%100}%;top:${(i*23.3+7)%88}%;--tw:${(2.4+(i%5)*.7).toFixed(1)}s;--td:-${(i*.37).toFixed(2)}s;--sz:${i%4?1:2}px"></span>`).join('');
+ sol.innerHTML=`<div class="orr-stage">${stars}<div class="orr-plane">${M.map((m,i)=>{const [k,code,sz,hue]=m,st=stOf(k),r=R0+i*GAP,d=(18+i*7.5).toFixed(1),ph=-((i*137.5)%360)/360*d;
    const px=Math.round(7+sz/64*9);
-   return `<div class="orr-orbit ${st.s}" style="--r:${r}px;--d:${d}s;--ph:${ph.toFixed(2)}s"><div class="orr-arm"><button class="orr-p ${st.s}" style="--s:${px}px;--hue:${hue}" data-k="${k}" aria-label="${k}: ${lab(st.s)}, ${st.open} open records"><span class="orr-body"></span>${st.s!=='ok'?'<span class="orr-pulse"></span>':''}<span class="orr-tag">${code}</span></button></div></div>`}).join('')}</div>
-   <div class="orr-sun ${sunTone}"><span class="orr-corona"></span><span class="orr-glow"></span><span class="orr-core"><b class="num">${score}</b></span></div></div>
+   return `<div class="orr-orbit ${st.s}" style="--r:${r}px;--d:${d}s;--ph:${ph.toFixed(2)}s;--tc:${hue}"><span class="orr-trail"></span><div class="orr-arm"><button class="orr-p ${st.s}" style="--s:${px}px;--hue:${hue}" data-k="${k}" aria-label="${k}: ${lab(st.s)}, ${st.open} open records"><span class="orr-body"></span>${st.s!=='ok'?'<span class="orr-pulse"></span>':''}<span class="orr-tag">${code}</span></button></div></div>`}).join('')}<div class="orr-sun ${sunTone}"><span class="orr-corona"></span><span class="orr-glow"></span><span class="orr-core"><b class="num">${score}</b></span></div></div></div>
   <div class="orr-cap"><span>Health</span><span class="orr-key"><i class="ok"></i>${M.filter(m=>stOf(m[0]).s==='ok').length}<i class="warn"></i>${M.filter(m=>stOf(m[0]).s==='warn').length}<i class="bad"></i>${M.filter(m=>stOf(m[0]).s==='bad').length}</span><span>markets</span></div>
   <div class="orr-card" aria-hidden="true"></div>`;
- hero.insertBefore(sol,hero.firstChild);
+ hero.insertBefore(sol,hero.firstChild);sol.classList.add('enter');setTimeout(()=>sol.classList.remove('enter'),1900);
  const card=sol.querySelector('.orr-card');const hide=()=>{sol.classList.remove('hold');card.classList.remove('on')};
  sol.querySelectorAll('.orr-p').forEach(p=>{const k=p.dataset.k,st=stOf(k);
   const show=()=>{sol.classList.add('hold');card.innerHTML=`<b>${esc(k)}</b><span>${esc(st.name)}</span><em class="${st.s}">${lab(st.s)}</em><small>${st.open} open records · ${st.js} journeys${st.fail?' · '+st.fail+' failing':''}</small><small>Click to open</small>`;card.classList.add('on')};
