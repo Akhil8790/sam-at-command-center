@@ -646,7 +646,7 @@ document.querySelectorAll('.nav li').forEach(li=>li.onclick=()=>{
 $('#railBtn').onclick=()=>$('#app').classList.toggle('rail');
 
 /* ---------- helpers ---------- */
-function spark(arr,col){const w=200,h=30,mx=Math.max(...arr),mn=Math.min(...arr),r=mx-mn||1;
+function spark(arr,col){arr=(arr||[]).map(v=>+v||0);if(arr.length<2)arr=[arr[0]||0,arr[0]||0];const w=200,h=30,mx=Math.max(...arr),mn=Math.min(...arr),r=mx-mn||1;
  const pts=arr.map((v,i)=>[i*(w/(arr.length-1)),h-3-((v-mn)/r)*(h-6)]);
  const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><defs><linearGradient id="sg${col.slice(1)}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".35"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>

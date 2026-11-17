@@ -8,7 +8,7 @@ import json, re, sys
 
 ST_BU = {'ok', 'bad'}
 ST_J = {'ok', 'bad', 'warn', 'none'}
-ST_R = {'Open', 'Retried OK', 'Suppressed'}
+ST_R = {'Open', 'Known', 'Retried OK', 'Suppressed'}
 SEV = {'bad', 'warn', 'info'}
 KINDS = {'birthday', 'welcome', 'tier', 'expiry', 'reactivate'}
 
@@ -26,7 +26,11 @@ def load(path):
         return None
     if re.search(r'\bfunction\b|=>|<script|`', body):
         raise ValueError('only plain data is allowed (no functions, arrows, template strings or script tags)')
-    # allow JS object keys without quotes by quoting them, then parse strictly as JSON
+    try:  # live_export.py writes strict JSON – parse it as-is first
+        return json.loads(body)
+    except json.JSONDecodeError:
+        pass
+    # hand-written files: allow JS object keys without quotes by quoting them, then parse strictly as JSON
     js = re.sub(r'(?<=[{,\s])([A-Za-z_]\w*)\s*:', r'"\1":', body)
     js = js.replace("'", '"')
     js = re.sub(r'/\*.*?\*/', '', js, flags=re.S)

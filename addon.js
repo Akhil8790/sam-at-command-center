@@ -106,7 +106,7 @@ const CHKERR={ESCROW_STUCK:{t:'Escrow past release date',c:'#BF5AF2',rc:'Escrow 
 if(!(LIVE&&LIVE.records))CHK.forEach(([chk,code,n,bu])=>{for(let i=0;i<n;i++){rid++;const b=bu==='All BUs'?pick(['TH 5640','SG 5010','MY 5050','HK 5090','KR 5040']):bu;const h=6+Math.floor(rnd()*3),m=Math.floor(rnd()*60);
  REC.push({id:'SS'+BUP[b]+'2025'+String(1000000+Math.floor(rnd()*8999999)),name:pick(FN)+' '+pick(LN),email:code==='E_NO_CONTACT'?'—':'h***@gmail.com',j:'CHK',jn:'Daily check · '+chk,bu:b,step:'Daily check',code,tier:pick(TIERS),
  ts:`16 Nov ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`,tsn:h*60+m,retry:0,st:'Open',src:'Daily check',sev:'bad'})}});
-const errInfo=c=>ERR[c]||CHKERR[c]||{t:c,c:'#8E8E93',rc:'',fix:[]};
+const errInfo=c=>ERR[c]||CHKERR[c]||(LIVE&&LIVE.codes&&LIVE.codes[c])||{t:String(c).replace(/^CHK_/,'').replace(/_/g,' ').toLowerCase().replace(/^./,m=>m.toUpperCase()),c:'#8E8E93',rc:'No playbook for this check yet. Open its findings file and review the record in Prod (read-only).',fix:[]};
 
 /* ---------------- incidents (clustered root causes) ---------------- */
 const INC=ERRK.map(code=>{const recs=REC.filter(r=>r.code===code);const js=[...new Set(recs.map(r=>r.j))].filter(x=>x!=='CHK');const bus=[...new Set(recs.map(r=>r.bu))];
@@ -249,7 +249,7 @@ function rcaBlock(code,n,j){const E=ERR[code];const inc=INC.find(i=>i.code===cod
 window.x_tick=el=>{el.classList.toggle('done');if(el.classList.contains('done')){const r=el.getBoundingClientRect();sparkle(r.left+14,r.top+10,'✓');const all=el.parentElement.querySelectorAll('.tstep'),dn=el.parentElement.querySelectorAll('.tstep.done');if(all.length===dn.length){confetti(r.left+40,r.top,90);toast('🎉','Playbook complete','All troubleshooting steps done — re-run the journey to verify','ok')}}};
 
 /* ---------------- record table helpers ---------------- */
-const STB={Open:'bad',Suppressed:'info','Retried OK':'ok'};
+const STB={Open:'bad',Known:'warn',Suppressed:'info','Retried OK':'ok'};
 function recTable(rs){return `<div class="rwrap" style="max-height:340px"><table class="rtbl"><thead><tr><th>Member ID</th><th>Name</th><th>Error</th><th>Time</th><th>Status</th></tr></thead><tbody>${rs.map((r,i)=>`<tr data-r="${r.id}" style="animation-delay:${i*15}ms"><td><span class="idc">${r.id}</span></td><td>${esc(r.name)}</td><td><span class="rchip" style="color:${errInfo(r.code).c};background:${errInfo(r.code).c}22">${errInfo(r.code).t}</span></td><td class="num">${r.ts}</td><td><span class="stbadge ${STB[r.st]}">${r.st}</span></td></tr>`).join('')}</tbody></table></div>`}
 function bindRecRows(root){root.querySelectorAll('tr[data-r]').forEach(tr=>tr.onclick=()=>x_openRec(tr.dataset.r))}
 window.x_openRec=function(id){const r=REC.find(x=>x.id===id);if(!r)return;const E=errInfo(r.code);const d=$('#drawer');d.classList.add('wide');
@@ -258,7 +258,7 @@ window.x_openRec=function(id){const r=REC.find(x=>x.id===id);if(!r)return;const 
  const t0=r.tsn-120;const tt=m=>`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
  d.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="color:var(--muted);font-size:12px">Records › ${r.bu}</div><h3 class="idc" style="font-size:20px">${r.id} <span class="copy" onclick="x_copy('${r.id}','${r.id}')">⧉</span></h3>
  <div style="color:var(--muted)">${esc(r.name)} · ${r.tier} · ${r.email}</div><span class="st ${STB[r.st]==='ok'?'ok':STB[r.st]==='info'?'warn':'bad'}">${r.st}</span></div><button class="iconbtn" onclick="closeAll()">✕</button></div>
- <div class="kv"><span>Journey / check</span><b>${esc(r.jn)}</b><span>Failed at step</span><b>${r.step}</b><span>Error code</span><b class="code">${r.code}</b><span>Error</span><b>${E.t}</b><span>Time</span><b>${r.ts} local</b><span>Retries</span><b>${r.retry}</b><span>Source</span><b>${r.src}</b></div>
+ <div class="kv"><span>Journey / check</span><b>${esc(r.jn)}</b><span>Failed at step</span><b>${r.step}</b><span>Error code</span><b class="code">${r.code}</b><span>Error</span><b>${E.t}</b>${r.detail?`<span>What is wrong</span><b style="font-weight:500">${esc(r.detail)}</b>`:''}${r.fix?`<span>Suggested fix</span><b style="font-weight:500">${esc(r.fix)}</b>`:''}<span>Time</span><b>${r.ts} local</b><span>Retries</span><b>${r.retry}</b><span>Source</span><b>${r.src}</b></div>
  <div class="diff"><div class="e"><small>Expected</small>${exp[0]}</div><div class="a"><small>Actual</small>${exp[1]}</div></div>
  <h4 style="font-size:14px;margin-top:16px">Record history</h4><div class="rec-tl">
   <div class="ok">Member qualified for journey<small>${tt(t0)} · entry filter passed</small></div>
